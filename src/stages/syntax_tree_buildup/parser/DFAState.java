@@ -1,4 +1,4 @@
-package stages.parser;
+package stages.syntax_tree_buildup.parser;
 
 import stages.lexer.CharacterType;
 

@@ -1,9 +1,13 @@
 package stages;
 
+import stages.syntax_tree_buildup.ASTNode;
 import stages.lexer.CharStream;
 import stages.lexer.Lexer;
-import stages.parser.Parser;
-import stages.semantic.SemanticAnalyzer;
+import stages.syntax_tree_buildup.parser.Parser;
+import stages.syntax_tree_buildup.scope.ScopeManager;
+import stages.syntax_tree_visit.IRGeneratorWithSymbolResolution;
+
+import java.util.Map;
 
 
 public class GreekPP {
@@ -15,14 +19,14 @@ public class GreekPP {
         }
 
         String codeFilePath = args[0];
-
-        //Stage 1
+        //Step 1 - Lexical Analysis
         Lexer lexer = new Lexer(new CharStream(codeFilePath));
-        //Stage 2
+        //Step 2 - Syntactical Analysis & creating syntax tree & filling symbol table with symbols
         Parser parser = new Parser(lexer);
-        //Stage 3
-        SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(parser.getABSRoot());
-        //Stage 4
+        //Step 3 - Generating IR code & resolving the symbol table symbols
+        IRGeneratorWithSymbolResolution IRGenerator
+                = new IRGeneratorWithSymbolResolution(parser.getABSRoot(), parser.getScopeManager());
+        //Step 4
 
     }
 }
