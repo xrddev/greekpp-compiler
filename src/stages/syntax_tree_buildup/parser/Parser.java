@@ -52,7 +52,7 @@ public class Parser {
             ParserErrors.programEndKeywordIsMissing(this.lookAheadToken);
 
         ASTNode programEndNode = new ASTNode(this.lookAheadToken.getRecognizedString(),
-                                                ASTNode.NodeType.KEYWORD,
+                                                ASTNode.NodeType.PROGRAM_END_KEYWORD,
                                                 this.lookAheadToken.getLine(),
                                                 this.lookAheadToken.getColumn());
         this.consumeToken();
@@ -71,13 +71,14 @@ public class Parser {
 
         root.addChild(this.keyword("πρόγραμμα"));
         root.addChild(this.ID(ASTNode.NodeType.PROGRAM_NAME));
-        root.addChild(this.programBlock());
+        String programName = root.getChildren().getLast().getAttribute();
+        root.addChild(this.programBlock(programName));
 
         return root;
     }
 
-    private ASTNode programBlock(){
-        ASTNode programBlockNode =  new ASTNode(ASTNode.NodeType.PROGRAM_BLOCK);
+    private ASTNode programBlock(String programName){
+        ASTNode programBlockNode =  new ASTNode(ASTNode.NodeType.PROGRAM_BLOCK, programName);
 
         programBlockNode.addChild(this.declarations());
         programBlockNode.addChild(this.subprograms());

@@ -42,6 +42,7 @@ public class ASTNode {
         OPTIONAL_SIGN,
         DECLARATIONS,
         KEYWORD,
+        PROGRAM_END_KEYWORD,
         ADD_OPERATOR,
         MUL_OPERATOR,
         REL_OPERATOR,
@@ -73,23 +74,33 @@ public class ASTNode {
     private static long idCounter = 0;
     private final long id;
 
+    private List<Integer> trueList;
+    private List<Integer> falseList;
 
-    private final String value;
+    private String attribute;
     private NodeType nodeType;
     private final List<ASTNode> children;
     private final int line;
     private final int column;
 
     public ASTNode(NodeType nodeType){
-        this.value = null;
+        this.attribute = null;
         this.line = this.column = 0;
         this.nodeType = nodeType;
         this.children = new ArrayList<>();
         this.id = idCounter++;
     }
 
-    public ASTNode(String value, NodeType nodeType, int line , int column){
-        this.value = value;
+    public ASTNode(NodeType nodeType, String otherNodeMessageForMe){
+        this.attribute = otherNodeMessageForMe;
+        this.line = this.column = 0;
+        this.nodeType = nodeType;
+        this.children = new ArrayList<>();
+        this.id = idCounter++;
+    }
+
+    public ASTNode(String attribute, NodeType nodeType, int line , int column){
+        this.attribute = attribute;
         this.nodeType = nodeType;
         this.line = line;
         this.column = column;
@@ -101,8 +112,8 @@ public class ASTNode {
         return nodeType;
     }
 
-    public String getValue() {
-        return value;
+    public String getAttribute() {
+        return attribute;
     }
 
     public List<ASTNode> getChildren(){
@@ -127,7 +138,7 @@ public class ASTNode {
 
     public void printNodeInfo(){
         System.out.println("ASTNode{" +
-                "value='" + value + '\'' +
+                "attribute='" + attribute + '\'' +
                 ", nodeType=" + nodeType +
                 ", line=" + line +
                 ", column=" + column +
@@ -137,6 +148,26 @@ public class ASTNode {
 
     public void setNodeType(NodeType nodeType){
         this.nodeType = nodeType;
+    }
+
+    public void setAttribute(String attribute){
+        this.attribute = attribute;
+    }
+
+    public List<Integer> getTrueList() {
+        return trueList;
+    }
+
+    public void setTrueList(List<Integer> trueList) {
+        this.trueList = trueList;
+    }
+
+    public List<Integer> getFalseList() {
+        return falseList;
+    }
+
+    public void setFalseList(List<Integer> falseList) {
+        this.falseList = falseList;
     }
 
     @Override
@@ -157,7 +188,7 @@ public class ASTNode {
         }
 
         if (this.getNodeType().isToken() || this.getNodeType().is(NodeType.VARIABLE_USAGE) || this.getNodeType().is(NodeType.FUNCTION_CALL_IN_ASSIGMENT)) {
-            sb.append("(").append(this.id).append(")"). append(" ").append("[TOKEN: ").append(this.getNodeType()).append(" : <").append(value).append(">]\n");
+            sb.append("(").append(this.id).append(")"). append(" ").append("[TOKEN: ").append(this.getNodeType()).append(" : <").append(attribute).append(">]\n");
         } else {
             sb.append("(").append(this.id).append(")"). append(" ").append("[NODE: ").append(nodeType).append("]\n");
         }

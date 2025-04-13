@@ -110,18 +110,18 @@ public class ScopeManager {
 
         success = switch (node.getNodeType()){
             case VARIABLE_IDENTIFIER ->{
-                Identifier variable = new Identifier(node.getValue(), Identifier.IdentifierKind.VARIABLE, Identifier.IdentifierDataType.INTEGER);
+                Identifier variable = new Identifier(node.getAttribute(), Identifier.IdentifierKind.VARIABLE, Identifier.IdentifierDataType.INTEGER);
                 symbol = variable;
                 yield this.currentScope.symbolTable.addIdentifier(variable);
             }
             case PROGRAM_NAME -> {
-                Identifier programName = new Identifier(node.getValue(), Identifier.IdentifierKind.PROGRAM_NAME, null);
+                Identifier programName = new Identifier(node.getAttribute(), Identifier.IdentifierKind.PROGRAM_NAME, null);
                 symbol = programName;
                 yield this.currentScope.symbolTable.addIdentifier(programName);
             }
             case FUNCTION_IDENTIFIER -> {
-                FunctionSymbol function = new FunctionSymbol(node.getValue());
-                Identifier functionReturnIdentifier = new Identifier(node.getValue(), Identifier.IdentifierKind.FUNCTION_RETURN, Identifier.IdentifierDataType.INTEGER);
+                FunctionSymbol function = new FunctionSymbol(node.getAttribute());
+                Identifier functionReturnIdentifier = new Identifier(node.getAttribute(), Identifier.IdentifierKind.FUNCTION_RETURN, Identifier.IdentifierDataType.INTEGER);
 
                 symbol = function;
                 this.parameterOwnerPointer = function;
@@ -129,13 +129,13 @@ public class ScopeManager {
                 yield this.globalScope.symbolTable.addFunction(function);
             }
             case PARAMETER_IDENTIFIER -> {
-                Identifier parameter = new Identifier(node.getValue(), Identifier.IdentifierKind.FUNCTION_PARAMETER , Identifier.IdentifierDataType.INTEGER);
+                Identifier parameter = new Identifier(node.getAttribute(), Identifier.IdentifierKind.FUNCTION_PARAMETER , Identifier.IdentifierDataType.INTEGER);
                 symbol = parameter;
                 this.parameterOwnerPointer.addParameter(parameter);
                 yield this.currentScope.symbolTable.addIdentifier(parameter);
             }
             case PROCEDURE_IDENTIFIER -> {
-                ProcedureSymbol procedure = new ProcedureSymbol(node.getValue());
+                ProcedureSymbol procedure = new ProcedureSymbol(node.getAttribute());
                 symbol = procedure;
                 this.parameterOwnerPointer = procedure;
                 yield this.globalScope.symbolTable.addProcedure(procedure);
