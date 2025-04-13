@@ -1,6 +1,6 @@
 package errors;
 
-import stages.parser.DFAState;
+import stages.syntax_tree_buildup.parser.DFAState;
 
 public final class LexerErrors {
     private LexerErrors(){

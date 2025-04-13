@@ -1,8 +1,7 @@
 package stages.lexer;
 
-import common.*;
 import errors.LexerErrors;
-import stages.parser.DFAState;
+import stages.syntax_tree_buildup.parser.DFAState;
 
 import java.util.Set;
 

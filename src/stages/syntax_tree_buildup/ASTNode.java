@@ -1,4 +1,4 @@
-package common;
+package stages.syntax_tree_buildup;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,7 +52,10 @@ public class ASTNode {
         PARAMETER_IDENTIFIER,
         FUNCTION_IDENTIFIER,
         PROCEDURE_IDENTIFIER,
-        NUMBER, PROGRAM_NAME, ASSIGMENT_IDENTIFIER;
+        NUMBER, PROGRAM_NAME,
+        VARIABLE_USAGE,
+        PARAMETER_INOUT_DECLARATION,
+        FUNCTION_CALL_IN_ASSIGMENT, SUBROUTINE_USAGE, PARAMETER_USAGE;
 
         public boolean isToken(){
             return switch (this){
@@ -67,8 +70,12 @@ public class ASTNode {
             return this == nodeType;
         }
     }
+    private static long idCounter = 0;
+    private final long id;
+
+
     private final String value;
-    private final NodeType nodeType;
+    private NodeType nodeType;
     private final List<ASTNode> children;
     private final int line;
     private final int column;
@@ -78,6 +85,7 @@ public class ASTNode {
         this.line = this.column = 0;
         this.nodeType = nodeType;
         this.children = new ArrayList<>();
+        this.id = idCounter++;
     }
 
     public ASTNode(String value, NodeType nodeType, int line , int column){
@@ -86,6 +94,7 @@ public class ASTNode {
         this.line = line;
         this.column = column;
         this.children = new ArrayList<>();
+        this.id = idCounter++;
     }
 
     public NodeType getNodeType() {
@@ -112,13 +121,22 @@ public class ASTNode {
         return this.column;
     }
 
+    public long getId() {
+        return this.id;
+    }
+
     public void printNodeInfo(){
         System.out.println("ASTNode{" +
                 "value='" + value + '\'' +
                 ", nodeType=" + nodeType +
                 ", line=" + line +
                 ", column=" + column +
+                ", id=" + id +
                 '}');
+    }
+
+    public void setNodeType(NodeType nodeType){
+        this.nodeType = nodeType;
     }
 
     @Override
@@ -138,10 +156,10 @@ public class ASTNode {
             indent += "│  ";
         }
 
-        if (this.getNodeType().isToken()) {
-            sb.append("[TOKEN: ").append(this.getNodeType()).append(" : <").append(value).append(">]\n");
+        if (this.getNodeType().isToken() || this.getNodeType().is(NodeType.VARIABLE_USAGE) || this.getNodeType().is(NodeType.FUNCTION_CALL_IN_ASSIGMENT)) {
+            sb.append("(").append(this.id).append(")"). append(" ").append("[TOKEN: ").append(this.getNodeType()).append(" : <").append(value).append(">]\n");
         } else {
-            sb.append("[NODE: ").append(nodeType).append("]\n");
+            sb.append("(").append(this.id).append(")"). append(" ").append("[NODE: ").append(nodeType).append("]\n");
         }
 
         for (int i = 0; i < children.size(); i++) {

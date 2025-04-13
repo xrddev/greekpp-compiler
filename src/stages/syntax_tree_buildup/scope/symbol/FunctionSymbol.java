@@ -1,16 +1,14 @@
-package stages.semantic.symbol;
+package stages.syntax_tree_buildup.scope.symbol;
 
-import java.util.List;
-
-public class FunctionSymbol extends ProcedureSymbol {
+public class FunctionSymbol extends Subroutine {
     public enum FunctionReturnType {
         INTEGER
     }
 
     private final FunctionReturnType returnType;
 
-    public FunctionSymbol(String name, List<Identifier> parameters){
-        super(name,parameters);
+    public FunctionSymbol(String name){
+        super(name);
         this.returnType = FunctionReturnType.INTEGER;
     }
 
@@ -18,8 +16,7 @@ public class FunctionSymbol extends ProcedureSymbol {
         return returnType;
     }
 
-    @Override
-    public String toString() {
+    public String toString(){
         return "FunctionSymbol{" +
                 "name='" + name + '\'' +
                 ", isUsed=" + isUsed +

@@ -1,20 +1,25 @@
-package stages.parser;
+package stages.syntax_tree_buildup.parser;
 
-import common.ASTNode;
-import common.Token;
+import stages.syntax_tree_buildup.ASTNode;
+import stages.lexer.Token;
 import errors.ParserErrors;
 import stages.lexer.Lexer;
+import stages.syntax_tree_buildup.scope.ScopeManager;
 
 public class Parser {
 
     private final Lexer lexer;
     private final ASTNode ABSRoot;
+    private final ScopeManager scopeManager;
+    private static final boolean SYMBOL_TABLE_ENABLED = true;
     private Token lookAheadToken;
 
 
     public Parser(Lexer lexer){
         this.lexer = lexer;
         this.lookAheadToken = this.lexer.getNextToken();
+
+        this.scopeManager = new ScopeManager();
         this.ABSRoot = this.parseProgram();
     }
 
@@ -37,6 +42,7 @@ public class Parser {
     public ASTNode getABSRoot(){
         return this.ABSRoot;
     }
+    public ScopeManager getScopeManager(){return this.scopeManager;}
 
     ///////////////////////////////////////////////////////////////////////
     //Greek++ grammar rules :
@@ -66,6 +72,7 @@ public class Parser {
         root.addChild(this.keyword("πρόγραμμα"));
         root.addChild(this.ID(ASTNode.NodeType.PROGRAM_NAME));
         root.addChild(this.programBlock());
+
         return root;
     }
 
@@ -117,6 +124,7 @@ public class Parser {
 
     private ASTNode function(){
         ASTNode functionNode = new ASTNode(ASTNode.NodeType.FUNCTION);
+        this.scopeManager.openScope();
 
         functionNode.addChild(this.keyword("συνάρτηση"));
         functionNode.addChild(this.ID(ASTNode.NodeType.FUNCTION_IDENTIFIER));
@@ -125,11 +133,13 @@ public class Parser {
         functionNode.addChild(this.closeParenthesis());
         functionNode.addChild(this.functionBlock());
 
+        this.scopeManager.closeScope();
         return functionNode;
     }
 
     private ASTNode procedure(){
         ASTNode procedureNode = new ASTNode(ASTNode.NodeType.PROCEDURE);
+        this.scopeManager.openScope();
 
         procedureNode.addChild(this.keyword("διαδικασία"));
         procedureNode.addChild(this.ID(ASTNode.NodeType.PROCEDURE_IDENTIFIER));
@@ -138,6 +148,7 @@ public class Parser {
         procedureNode.addChild(this.closeParenthesis());
         procedureNode.addChild(this.procedureBlock());
 
+        this.scopeManager.closeScope();
         return procedureNode;
     }
 
@@ -185,7 +196,7 @@ public class Parser {
 
         if(this.lookAheadTokenStringEqualsTo("είσοδος")){
             functionInputNode.addChild(this.keyword("είσοδος"));
-            functionInputNode.addChild(this.varList(ASTNode.NodeType.PARAMETER_IDENTIFIER));
+            functionInputNode.addChild(this.varList(ASTNode.NodeType.PARAMETER_INOUT_DECLARATION));
         }
         //Function Input is optional
         return functionInputNode;
@@ -196,7 +207,7 @@ public class Parser {
 
         if(this.lookAheadTokenStringEqualsTo("έξοδος")) {
             functionOutputNode.addChild(this.keyword("έξοδος"));
-            functionOutputNode.addChild(this.varList(ASTNode.NodeType.PARAMETER_IDENTIFIER));
+            functionOutputNode.addChild(this.varList(ASTNode.NodeType.PARAMETER_INOUT_DECLARATION));
         }
         //Function Output is optional
         return functionOutputNode;
@@ -233,7 +244,7 @@ public class Parser {
     private ASTNode assigmentStatement(){
         ASTNode assigmentStatementNode = new ASTNode(ASTNode.NodeType.ASSIGMENT_STATEMENT);
 
-        assigmentStatementNode.addChild(this.ID(ASTNode.NodeType.ASSIGMENT_IDENTIFIER));
+        assigmentStatementNode.addChild(this.ID(ASTNode.NodeType.VARIABLE_USAGE));
         assigmentStatementNode.addChild(this.colon());
         assigmentStatementNode.addChild(this.equal());
         assigmentStatementNode.addChild(this.expression());
@@ -290,6 +301,7 @@ public class Parser {
 
     private ASTNode forStatement(){
         ASTNode forStatementNode = new ASTNode(ASTNode.NodeType.FOR_STATEMENT);
+        this.scopeManager.openScope();
 
         forStatementNode.addChild(this.keyword("για"));
         forStatementNode.addChild(this.ID(ASTNode.NodeType.VARIABLE_IDENTIFIER));
@@ -303,6 +315,7 @@ public class Parser {
         forStatementNode.addChild(this.sequence());
         forStatementNode.addChild(this.keyword("για_τέλος"));
 
+        this.scopeManager.closeScope();
         return forStatementNode;
     }
 
@@ -330,7 +343,7 @@ public class Parser {
         ASTNode inputStatementNode = new ASTNode(ASTNode.NodeType.INPUT_STATEMENT);
 
         inputStatementNode.addChild(this.keyword("διάβασε"));
-        inputStatementNode.addChild(this.ID(ASTNode.NodeType.VARIABLE_IDENTIFIER));
+        inputStatementNode.addChild(this.ID(ASTNode.NodeType.VARIABLE_USAGE));
 
         return inputStatementNode;
     }
@@ -339,7 +352,7 @@ public class Parser {
         ASTNode callStatementNode = new ASTNode(ASTNode.NodeType.CALL_STATEMENT);
 
         callStatementNode.addChild(this.keyword("εκτέλεσε"));
-        callStatementNode.addChild(this.ID(ASTNode.NodeType.VARIABLE_IDENTIFIER));
+        callStatementNode.addChild(this.ID(ASTNode.NodeType.SUBROUTINE_USAGE));
         callStatementNode.addChild(this.idTail());
 
         return callStatementNode;
@@ -383,7 +396,7 @@ public class Parser {
 
         if(this.lookAheadTokenStringEqualsTo("%")){
             actualParameterItemNode.addChild(this.referenceOperator());
-            actualParameterItemNode.addChild(this.ID(ASTNode.NodeType.PARAMETER_IDENTIFIER));
+            actualParameterItemNode.addChild(this.ID(ASTNode.NodeType.PARAMETER_USAGE));
         }else {
             actualParameterItemNode.addChild(this.expression());
         }
@@ -469,8 +482,16 @@ public class Parser {
             case Token.TokenFamily.NUMBER ->
                     factorNode.addChild(this.INTEGER());
             case Token.TokenFamily.IDENTIFIER -> {
-                factorNode.addChild(this.ID(ASTNode.NodeType.VARIABLE_IDENTIFIER));
-                factorNode.addChild(this.idTail());
+                //Default case : Identifier is a variable;
+                ASTNode IDNode = this.ID(ASTNode.NodeType.VARIABLE_USAGE);
+                ASTNode IDTailNode = this.idTail();
+
+                //If idTailIs is present, identifier is function call
+                if(!IDTailNode.getChildren().isEmpty())
+                    IDNode.setNodeType(ASTNode.NodeType.FUNCTION_CALL_IN_ASSIGMENT);
+
+                factorNode.addChild(IDNode);
+                factorNode.addChild(IDTailNode);
             }
             default -> {
                 factorNode.addChild(this.parenthesisOpen());
@@ -697,6 +718,8 @@ public class Parser {
                 this.lookAheadToken.getLine(),
                 this.lookAheadToken.getColumn());
 
+        this.scopeManager.registerSymbol(SYMBOL_TABLE_ENABLED,ID);
+        this.scopeManager.bindNodeWithCurrentScope(SYMBOL_TABLE_ENABLED,ID.getId());
         this.consumeToken();
         return ID;
     }

@@ -1,4 +1,4 @@
-package stages.semantic.symbol;
+package stages.syntax_tree_buildup.scope.symbol;
 
 public abstract class Symbol {
 
@@ -20,6 +20,11 @@ public abstract class Symbol {
 
     public boolean isUsed() {
         return isUsed;
+    }
+
+    public Symbol markAsUsed() {
+        this.isUsed = true;
+        return this;
     }
 
 }

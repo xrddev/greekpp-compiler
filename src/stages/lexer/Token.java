@@ -1,7 +1,5 @@
-package common;
-import stages.lexer.CharStream;
-import stages.lexer.Lexer;
-import stages.parser.DFAState;
+package stages.lexer;
+import stages.syntax_tree_buildup.parser.DFAState;
 
 
 public class Token {

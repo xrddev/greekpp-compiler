@@ -1,10 +1,12 @@
-package stages.semantic.symbol;
+package stages.syntax_tree_buildup.scope.symbol;
 
 public class Identifier extends Symbol {
     public enum IdentifierKind{
         VARIABLE,
         FUNCTION_PARAMETER,
-        PROCEDURE_PARAMETER
+        PROCEDURE_PARAMETER,
+        FUNCTION_RETURN,
+        PROGRAM_NAME;
     }
 
     public enum IdentifierDataType{

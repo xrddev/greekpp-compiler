@@ -1,7 +1,7 @@
 package errors;
 
 
-import common.Token;
+import stages.lexer.Token;
 
 public class ParserErrors {
 
