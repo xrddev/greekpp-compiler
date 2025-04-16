@@ -1,4 +1,4 @@
-package stages.lexer;
+package stages.astree.lexer;
 
 import java.io.IOException;
 import java.nio.file.Files;

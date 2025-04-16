@@ -1,25 +1,18 @@
-package stages.syntax_tree_buildup.parser;
+package stages.astree.parser;
 
-import stages.syntax_tree_buildup.ASTNode;
-import stages.lexer.Token;
+import stages.astree.lexer.Token;
 import errors.ParserErrors;
-import stages.lexer.Lexer;
-import stages.syntax_tree_buildup.scope.ScopeManager;
+import stages.astree.lexer.Lexer;
 
 public class Parser {
 
     private final Lexer lexer;
     private final ASTNode ABSRoot;
-    private final ScopeManager scopeManager;
-    private static final boolean SYMBOL_TABLE_ENABLED = true;
     private Token lookAheadToken;
-
 
     public Parser(Lexer lexer){
         this.lexer = lexer;
         this.lookAheadToken = this.lexer.getNextToken();
-
-        this.scopeManager = new ScopeManager();
         this.ABSRoot = this.parseProgram();
     }
 
@@ -42,7 +35,6 @@ public class Parser {
     public ASTNode getABSRoot(){
         return this.ABSRoot;
     }
-    public ScopeManager getScopeManager(){return this.scopeManager;}
 
     ///////////////////////////////////////////////////////////////////////
     //Greek++ grammar rules :
@@ -71,7 +63,7 @@ public class Parser {
 
         root.addChild(this.keyword("πρόγραμμα"));
         root.addChild(this.ID(ASTNode.NodeType.PROGRAM_NAME));
-        String programName = root.getChildren().getLast().getAttribute();
+        String programName = root.getChildren().getLast().getPlace();
         root.addChild(this.programBlock(programName));
 
         return root;
@@ -125,7 +117,6 @@ public class Parser {
 
     private ASTNode function(){
         ASTNode functionNode = new ASTNode(ASTNode.NodeType.FUNCTION);
-        this.scopeManager.openScope();
 
         functionNode.addChild(this.keyword("συνάρτηση"));
         functionNode.addChild(this.ID(ASTNode.NodeType.FUNCTION_IDENTIFIER));
@@ -134,13 +125,11 @@ public class Parser {
         functionNode.addChild(this.closeParenthesis());
         functionNode.addChild(this.functionBlock());
 
-        this.scopeManager.closeScope();
         return functionNode;
     }
 
     private ASTNode procedure(){
         ASTNode procedureNode = new ASTNode(ASTNode.NodeType.PROCEDURE);
-        this.scopeManager.openScope();
 
         procedureNode.addChild(this.keyword("διαδικασία"));
         procedureNode.addChild(this.ID(ASTNode.NodeType.PROCEDURE_IDENTIFIER));
@@ -149,7 +138,6 @@ public class Parser {
         procedureNode.addChild(this.closeParenthesis());
         procedureNode.addChild(this.procedureBlock());
 
-        this.scopeManager.closeScope();
         return procedureNode;
     }
 
@@ -302,7 +290,6 @@ public class Parser {
 
     private ASTNode forStatement(){
         ASTNode forStatementNode = new ASTNode(ASTNode.NodeType.FOR_STATEMENT);
-        this.scopeManager.openScope();
 
         forStatementNode.addChild(this.keyword("για"));
         forStatementNode.addChild(this.ID(ASTNode.NodeType.VARIABLE_IDENTIFIER));
@@ -316,7 +303,6 @@ public class Parser {
         forStatementNode.addChild(this.sequence());
         forStatementNode.addChild(this.keyword("για_τέλος"));
 
-        this.scopeManager.closeScope();
         return forStatementNode;
     }
 
@@ -503,7 +489,6 @@ public class Parser {
         return factorNode;
     }
 
-
     private ASTNode optionalSign(){
         ASTNode optionalSignNode = new ASTNode(ASTNode.NodeType.OPTIONAL_SIGN);
 
@@ -512,8 +497,6 @@ public class Parser {
 
         return optionalSignNode;
     }
-
-
 
     // Terminal Nodes
 
@@ -719,8 +702,6 @@ public class Parser {
                 this.lookAheadToken.getLine(),
                 this.lookAheadToken.getColumn());
 
-        this.scopeManager.registerSymbol(SYMBOL_TABLE_ENABLED,ID);
-        this.scopeManager.bindNodeWithCurrentScope(SYMBOL_TABLE_ENABLED,ID.getId());
         this.consumeToken();
         return ID;
     }

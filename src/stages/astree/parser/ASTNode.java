@@ -1,4 +1,4 @@
-package stages.syntax_tree_buildup;
+package stages.astree.parser;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,14 +77,14 @@ public class ASTNode {
     private List<Integer> trueList;
     private List<Integer> falseList;
 
-    private String attribute;
+    private String place;
     private NodeType nodeType;
     private final List<ASTNode> children;
     private final int line;
     private final int column;
 
     public ASTNode(NodeType nodeType){
-        this.attribute = null;
+        this.place = null;
         this.line = this.column = 0;
         this.nodeType = nodeType;
         this.children = new ArrayList<>();
@@ -92,15 +92,15 @@ public class ASTNode {
     }
 
     public ASTNode(NodeType nodeType, String otherNodeMessageForMe){
-        this.attribute = otherNodeMessageForMe;
+        this.place = otherNodeMessageForMe;
         this.line = this.column = 0;
         this.nodeType = nodeType;
         this.children = new ArrayList<>();
         this.id = idCounter++;
     }
 
-    public ASTNode(String attribute, NodeType nodeType, int line , int column){
-        this.attribute = attribute;
+    public ASTNode(String place, NodeType nodeType, int line , int column){
+        this.place = place;
         this.nodeType = nodeType;
         this.line = line;
         this.column = column;
@@ -112,8 +112,8 @@ public class ASTNode {
         return nodeType;
     }
 
-    public String getAttribute() {
-        return attribute;
+    public String getPlace() {
+        return place;
     }
 
     public List<ASTNode> getChildren(){
@@ -138,7 +138,7 @@ public class ASTNode {
 
     public void printNodeInfo(){
         System.out.println("ASTNode{" +
-                "attribute='" + attribute + '\'' +
+                "attribute='" + place + '\'' +
                 ", nodeType=" + nodeType +
                 ", line=" + line +
                 ", column=" + column +
@@ -150,8 +150,8 @@ public class ASTNode {
         this.nodeType = nodeType;
     }
 
-    public void setAttribute(String attribute){
-        this.attribute = attribute;
+    public void setPlace(String place){
+        this.place = place;
     }
 
     public List<Integer> getTrueList() {
@@ -187,8 +187,8 @@ public class ASTNode {
             indent += "│  ";
         }
 
-        if (this.getNodeType().isToken() || this.getNodeType().is(NodeType.VARIABLE_USAGE) || this.getNodeType().is(NodeType.FUNCTION_CALL_IN_ASSIGMENT)) {
-            sb.append("(").append(this.id).append(")"). append(" ").append("[TOKEN: ").append(this.getNodeType()).append(" : <").append(attribute).append(">]\n");
+        if (this.getNodeType().isToken() || this.getNodeType().is(NodeType.PARAMETER_USAGE) || this.getNodeType().is(NodeType.SUBROUTINE_USAGE)|| this.getNodeType().is(NodeType.VARIABLE_USAGE) || this.getNodeType().is(NodeType.FUNCTION_CALL_IN_ASSIGMENT)) {
+            sb.append("(").append(this.id).append(")"). append(" ").append("[TOKEN: ").append(this.getNodeType()).append(" : <").append(place).append(">]\n");
         } else {
             sb.append("(").append(this.id).append(")"). append(" ").append("[NODE: ").append(nodeType).append("]\n");
         }
