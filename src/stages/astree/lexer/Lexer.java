@@ -1,7 +1,7 @@
-package stages.lexer;
+package stages.astree.lexer;
 
 import errors.LexerErrors;
-import stages.syntax_tree_buildup.parser.DFAState;
+import stages.astree.parser.DFAState;
 
 import java.util.Set;
 

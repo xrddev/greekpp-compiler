@@ -1,6 +1,6 @@
-package stages.syntax_tree_buildup.parser;
+package stages.astree.parser;
 
-import stages.lexer.CharacterType;
+import stages.astree.lexer.CharacterType;
 
 import java.util.EnumMap;
 import java.util.Map;

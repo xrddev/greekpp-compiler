@@ -1,5 +1,5 @@
-package stages.lexer;
-import stages.syntax_tree_buildup.parser.DFAState;
+package stages.astree.lexer;
+import stages.astree.parser.DFAState;
 
 
 public class Token {
