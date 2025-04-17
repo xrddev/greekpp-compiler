@@ -23,11 +23,9 @@ public class IRGenerator extends Visitor {
     public ScopeManager getScopeManager() {
         return scopeManager;
     }
-
     public QuadManager getQuadManager() {
         return quadManager;
     }
-
     private void registerVariable(ASTNode IDNode){
         Variable variable = new Variable(IDNode.getPlace(), DataType.Integer,this.scopeManager.getCurrentScopeOffset());
         this.scopeManager.setCurrentScopeOffset(this.scopeManager.getCurrentScopeOffset() + 4);
@@ -38,9 +36,10 @@ public class IRGenerator extends Visitor {
         Parameter parameter = new Parameter(IDNode.getPlace(),DataType.Integer,this.scopeManager.getCurrentScopeOffset());
         this.scopeManager.setCurrentScopeOffset(this.scopeManager.getCurrentScopeOffset() + 4);
         this.parameterOwnerPointer.getFormalParameters().add(parameter);
-        this.scopeManager.addVariable(parameter);
-    }
+        if(!this.scopeManager.addVariable(parameter))
+            SemanticErrors.alreadyDeclaredParameter(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
 
+    }
 
 
 
@@ -59,12 +58,15 @@ public class IRGenerator extends Visitor {
 
     @Override
     public void visitPrintStatement(ASTNode printStatementNode) {
-        this.quadManager.generateQuad("out", null, null, null);
+        ASTNode expressionNode = printStatementNode.getChildren().get(1);
+        this.visit(expressionNode);
+        this.quadManager.generateQuad("out", null, null, expressionNode.getPlace());
     }
 
     @Override
     public void visitInputStatement(ASTNode inputStatementNode) {
-        this.quadManager.generateQuad("in", null, null, null);
+        ASTNode IDNode = inputStatementNode.getChildren().get(1);
+        this.quadManager.generateQuad("in", null, null, IDNode.getPlace());
     }
 
     @Override
@@ -74,7 +76,12 @@ public class IRGenerator extends Visitor {
 
         ASTNode T1 = expressionNode.getChildren().get(1);
         this.visit(T1);
-        T1.setPlace(sign.getPlace() + T1.getPlace());
+
+        if(sign.getPlace().equals("-")){
+            String temp = this.quadManager.newTemp();
+            this.quadManager.generateQuad("-", "0", T1.getPlace(), temp);
+            T1.setPlace(temp);
+        }
 
         for (int i = 2; i < expressionNode.getChildren().size(); i += 2) {
             ASTNode operator = expressionNode.getChildren().get(i);
@@ -95,7 +102,10 @@ public class IRGenerator extends Visitor {
         if (optionalSignNode.getChildren().isEmpty())
             optionalSignNode.setPlace("");
         else
-            optionalSignNode.setPlace(optionalSignNode.getChildren().getFirst().getPlace());
+            switch (optionalSignNode.getChildren().getFirst().getPlace()) {
+                case "-" -> optionalSignNode.setPlace("-");
+                case "+" -> optionalSignNode.setPlace("");
+            }
     }
 
     @Override
@@ -241,7 +251,11 @@ public class IRGenerator extends Visitor {
         ASTNode expressionNode = assignmentStatementNode.getChildren().get(3);
         this.visit(expressionNode);
 
-        this.quadManager.generateQuad(":=", variableUsageNode.getPlace(), null, expressionNode.getPlace());
+        ASTNode factorID = expressionNode.getChildren().get(1).getChildren().getFirst().getChildren().getFirst();
+        if(factorID.getNodeType() == ASTNode.NodeType.FUNCTION_CALL_IN_ASSIGMENT)
+            this.quadManager.flashOutOfOrderQuads();
+
+        this.quadManager.generateQuad(":=",expressionNode.getPlace() , null, variableUsageNode.getPlace());
     }
 
     @Override
@@ -344,18 +358,13 @@ public class IRGenerator extends Visitor {
     }
 
 
-
-
-
-
-
-
     @Override
     public void visitProcedure(ASTNode procedureNode) {
         String procedureName = procedureNode.getChildren().get(1).getPlace();
         Procedure procedure = new Procedure(procedureName);
         this.parameterOwnerPointer = procedure;
-        this.scopeManager.addSubroutine(procedure);
+        if(!this.scopeManager.addSubroutine(procedure))
+            SemanticErrors.alreadyDeclaredProcedure(procedureName, procedureNode.getLine(), procedureNode.getColumn());
 
         int procedureTemps = this.quadManager.nextQuad();
         this.scopeManager.openScope();
@@ -380,7 +389,8 @@ public class IRGenerator extends Visitor {
         String functionName = functionNode.getChildren().get(1).getPlace();
         Function function = new Function(functionName, DataType.Integer);
         this.parameterOwnerPointer = function;
-        this.scopeManager.addSubroutine(function);
+        if(!this.scopeManager.addSubroutine(function))
+            SemanticErrors.alreadyDeclaredFunction(functionName, functionNode.getLine(), functionNode.getColumn());
 
         int functionTemps = this.quadManager.nextQuad();
         this.scopeManager.openScope();
@@ -398,8 +408,6 @@ public class IRGenerator extends Visitor {
         function.setFrameLength(this.scopeManager.getCurrentScopeOffset() + functionTemps);
         this.scopeManager.closeScope();
     }
-
-
 
     @Override
     public void visitFunctionInput(ASTNode functionInputNode) {
@@ -437,12 +445,30 @@ public class IRGenerator extends Visitor {
                 });
     }
 
+    @Override
+    public void visitCallStatement(ASTNode callStatementNode) {
+        String procedureName = callStatementNode.getChildren().get(1).getPlace();
+        ASTNode idTailNode = callStatementNode.getChildren().get(2);
 
+        this.visit(idTailNode);
+        this.quadManager.generateDelayedQuad("call", procedureName, null, null);
+        this.quadManager.flashOutOfOrderQuads();
+    }
 
-
-
-
-
+    @Override
+    public void visitActualParameterItem(ASTNode actualParameterItemNode) {
+        switch (actualParameterItemNode.getChildren().getFirst().getNodeType()){
+            case REFERENCE_OPERATOR -> {
+                ASTNode IDNode = actualParameterItemNode.getChildren().get(1);
+                this.quadManager.generateDelayedQuad("par",IDNode.getPlace(), "ref", null);
+            }
+            case EXPRESSION -> {
+                ASTNode expressionNode = actualParameterItemNode.getChildren().getFirst();
+                this.visit(expressionNode);
+                this.quadManager.generateDelayedQuad("par",expressionNode.getPlace(), "cv", null);
+            }
+        }
+    }
 
     @Override
     public void visitFactor(ASTNode factorNode) {
@@ -453,7 +479,16 @@ public class IRGenerator extends Visitor {
                 factorNode.setPlace(numberORVarNode.getPlace());
             }
             case FUNCTION_CALL_IN_ASSIGMENT -> {
-                factorNode.setPlace(null);
+                ASTNode IDNode = factorNode.getChildren().getFirst();
+                ASTNode idTailNode = factorNode.getChildren().get(1);
+
+                this.quadManager.openDelayedQuadsLevel();
+                this.visit(idTailNode);
+                String newTemp = this.quadManager.newTemp();
+                this.quadManager.generateDelayedQuad("par", newTemp, "ret", null);
+                this.quadManager.generateDelayedQuad("call", IDNode.getPlace(), null, null);
+                this.quadManager.closeDelayedQuadsLevel();
+                factorNode.setPlace(newTemp);
             }
             default -> {
                 ASTNode expressionNode = factorNode.getChildren().get(1);
@@ -461,6 +496,5 @@ public class IRGenerator extends Visitor {
                 factorNode.setPlace(expressionNode.getPlace());
             }
         }
-
     }
 }
