@@ -469,7 +469,7 @@ public class Parser {
             case Token.TokenFamily.NUMBER ->
                     factorNode.addChild(this.INTEGER());
             case Token.TokenFamily.IDENTIFIER -> {
-                //Default case : Identifier is a variable;
+                //Default case: Identifier is a variable;
                 ASTNode IDNode = this.ID(ASTNode.NodeType.VARIABLE_USAGE);
                 ASTNode IDTailNode = this.idTail();
 
