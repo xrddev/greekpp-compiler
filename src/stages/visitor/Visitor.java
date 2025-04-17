@@ -30,6 +30,8 @@ public abstract class Visitor {
             case FUNCTION_IDENTIFIER, PARAMETER_IDENTIFIER,PROCEDURE_IDENTIFIER, VARIABLE_IDENTIFIER, PARAMETER_INOUT_DECLARATION -> this.visitID(node);
             case FUNCTION_INPUT -> this.visitFunctionInput(node);
             case FUNCTION_OUTPUT -> this.visitFunctionOutput(node);
+            case CALL_STATEMENT -> this.visitCallStatement(node);
+            case ACTUAL_PARAMETER_ITEM -> this.visitActualParameterItem(node);
             default -> this.defaultVisit(node);
         }
     }
@@ -63,6 +65,8 @@ public abstract class Visitor {
     public abstract void visitID(ASTNode node);
     public abstract void visitFunctionInput(ASTNode node);
     public abstract void visitFunctionOutput(ASTNode node);
+    public abstract void visitCallStatement(ASTNode node);
+    public abstract void visitActualParameterItem(ASTNode node);
 
 }
 
