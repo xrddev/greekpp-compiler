@@ -24,7 +24,7 @@ public class GreekPP {
         Parser parser = new Parser(lexer);
         ASTNode AbstractSyntaxTreeRoot = parser.getABSRoot();
 
-        //Step 3 -
+
         IRGenerator irGenerator = new IRGenerator();
         irGenerator.visit(AbstractSyntaxTreeRoot);
         irGenerator.getQuadManager().printQuads();

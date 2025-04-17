@@ -48,7 +48,7 @@ public class Token {
         this.line = charStreamPointer.getLinesCount();
         this.startIndex = startIndex;
         this.stopIndex = charStreamPointer.getPosition() - 1;   //Position always looking the next char to be consumed.
-        this.column = charStreamPointer.getColumn() - (this.stopIndex - this.startIndex + 1);   // We consider column index the first char of the token
+        this.column = charStreamPointer.getColumn() - (this.stopIndex - this.startIndex + 1);   // We consider the column index the first char of the token
         this.family = TokenFamily.fromDFAState(finalState, charStreamPointer, startIndex, stopIndex);
     }
 
