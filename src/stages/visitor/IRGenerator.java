@@ -12,13 +12,17 @@ import java.util.List;
 public class IRGenerator extends Visitor {
     private final QuadManager quadManager;
     private final ScopeManager scopeManager;
-    private Procedure parameterOwnerPointer;
+    private Procedure currentScopeOwner;
+    private List<Variable> currentScopeTemporaryVariables;
 
     public IRGenerator() {
         this.scopeManager = new ScopeManager();
         this.quadManager = new QuadManager();
-        this.parameterOwnerPointer = null;
+        this.currentScopeTemporaryVariables = new ArrayList<>();
+        this.currentScopeOwner = new Procedure("$$$$$____MAIN_METHOD____$$$$$");
+        this.registerProcedure(this.currentScopeOwner,0,0);
     }
+
 
     public ScopeManager getScopeManager() {
         return scopeManager;
@@ -26,27 +30,44 @@ public class IRGenerator extends Visitor {
     public QuadManager getQuadManager() {
         return quadManager;
     }
-    private void registerVariable(ASTNode IDNode){
-        Variable variable = new Variable(IDNode.getPlace(), DataType.Integer,this.scopeManager.getCurrentScopeOffset());
-        this.scopeManager.setCurrentScopeOffset(this.scopeManager.getCurrentScopeOffset() + 4);
+
+    private void registerVariable(Variable variable, int line , int column){
         if(!this.scopeManager.addVariable(variable))
-            SemanticErrors.alreadyDeclaredVariable(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+            SemanticErrors.alreadyDeclaredVariable(variable.getName(), line, column);
     }
-    private void registerParameter(ASTNode IDNode){
-        Parameter parameter = new Parameter(IDNode.getPlace(),DataType.Integer,this.scopeManager.getCurrentScopeOffset());
-        this.scopeManager.setCurrentScopeOffset(this.scopeManager.getCurrentScopeOffset() + 4);
-        this.parameterOwnerPointer.getFormalParameters().add(parameter);
+    private void registerParameter(Parameter parameter, int line , int column){
+        this.currentScopeOwner.getActivationRecord().addFormalParameter(parameter);
         if(!this.scopeManager.addVariable(parameter))
-            SemanticErrors.alreadyDeclaredParameter(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+            SemanticErrors.alreadyDeclaredParameter(parameter.getName(), line, column);
 
+    }
+    private void registerFunction(Function function, int line , int column){
+        if(!this.scopeManager.addSubroutine(function))
+            SemanticErrors.alreadyDeclaredFunction(function.getName(), line, column);
+    }
+    private void registerProcedure(Procedure procedure, int line , int column){
+        if(!this.scopeManager.addSubroutine(procedure))
+            SemanticErrors.alreadyDeclaredProcedure(procedure.getName(), line, column);
     }
 
 
+    //Visitors
 
     @Override
     public void visitProgramBlock(ASTNode programBlockNode) {
+        ASTNode declarationsNode = programBlockNode.getChildren().getFirst();
+        ASTNode subprogramsNode = programBlockNode.getChildren().get(1);
+        ASTNode sequenceNode = programBlockNode.getChildren().get(3);
+        ASTNode programEndNode = programBlockNode.getChildren().get(4);
+
+
+        this.visit(declarationsNode);
+        this.visit(subprogramsNode);
+
         this.quadManager.generateQuad("BEGIN_BLOCK", programBlockNode.getPlace(), null, null);
-        programBlockNode.getChildren().forEach(this::visit);
+        this.visit(sequenceNode);
+        this.visit(programEndNode);
+
         this.quadManager.generateQuad("END_BLOCK", programBlockNode.getPlace(), null, null);
         this.scopeManager.closeScope();
     }
@@ -66,6 +87,7 @@ public class IRGenerator extends Visitor {
     @Override
     public void visitInputStatement(ASTNode inputStatementNode) {
         ASTNode IDNode = inputStatementNode.getChildren().get(1);
+        this.visit(IDNode);
         this.quadManager.generateQuad("in", null, null, IDNode.getPlace());
     }
 
@@ -77,11 +99,7 @@ public class IRGenerator extends Visitor {
         ASTNode T1 = expressionNode.getChildren().get(1);
         this.visit(T1);
 
-        if(sign.getPlace().equals("-")){
-            String temp = this.quadManager.newTemp();
-            this.quadManager.generateQuad("-", "0", T1.getPlace(), temp);
-            T1.setPlace(temp);
-        }
+        this.negativeNumberMapping(T1,sign);
 
         for (int i = 2; i < expressionNode.getChildren().size(); i += 2) {
             ASTNode operator = expressionNode.getChildren().get(i);
@@ -91,10 +109,19 @@ public class IRGenerator extends Visitor {
             this.visit(T2);
 
             String temp = this.quadManager.newTemp();
+            this.currentScopeTemporaryVariables.add(new Variable(temp,DataType.Integer));
             this.quadManager.generateQuad(operator.getPlace(), T1.getPlace(), T2.getPlace(), temp);
             T1.setPlace(temp);
         }
         expressionNode.setPlace(T1.getPlace());
+    }
+    private void negativeNumberMapping(ASTNode T1 , ASTNode sign){
+        if(sign.getPlace().equals("-")){
+            String temp = this.quadManager.newTemp();
+            this.currentScopeTemporaryVariables.add(new Variable(temp,DataType.Integer));
+            this.quadManager.generateQuad("-", "0", T1.getPlace(), temp);
+            T1.setPlace(temp);
+        }
     }
 
     @Override
@@ -121,10 +148,49 @@ public class IRGenerator extends Visitor {
             this.visit(F2);
 
             String temp = this.quadManager.newTemp();
+            this.currentScopeTemporaryVariables.add(new Variable(temp,DataType.Integer));
             this.quadManager.generateQuad(operator.getPlace(), F1.getPlace(), F2.getPlace(), temp);
             F1.setPlace(temp);
         }
         termNode.setPlace(F1.getPlace());
+    }
+
+    @Override
+    public void visitFactor(ASTNode factorNode) {
+        switch (factorNode.getChildren().getFirst().getNodeType()) {
+            case NUMBER, VARIABLE_USAGE -> this.numberOrVariableFactor(factorNode);
+            case FUNCTION_CALL_IN_ASSIGMENT -> this.functionCallInAssigmentFactor(factorNode);
+            default -> this.expressionFactor(factorNode);
+        }
+    }
+    private void numberOrVariableFactor(ASTNode factorNode){
+        ASTNode numberORVarNode = factorNode.getChildren().getFirst();
+        this.visit(numberORVarNode);
+        factorNode.setPlace(numberORVarNode.getPlace());
+    }
+    private void functionCallInAssigmentFactor(ASTNode factorNode){
+        ASTNode IDNode = factorNode.getChildren().getFirst();
+        ASTNode idTailNode = factorNode.getChildren().get(1);
+        ASTNode actualParameterListNode = idTailNode.getChildren().getFirst().getChildren().get(1);
+
+        this.quadManager.openDelayedQuadsLevel();
+
+        this.visit(IDNode);
+        this.legalNumberOfParametersCheck(IDNode,actualParameterListNode);
+        this.visit(idTailNode);
+
+        String temp = this.quadManager.newTemp();
+        this.currentScopeTemporaryVariables.add(new Variable(temp,DataType.Integer));
+        this.quadManager.generateDelayedQuad("par", temp, "ret", null);
+        this.quadManager.generateDelayedQuad("call", null, null, IDNode.getPlace());
+
+        this.quadManager.closeDelayedQuadsLevel();
+        factorNode.setPlace(temp);
+    }
+    private void expressionFactor(ASTNode factorNode){
+        ASTNode expressionNode = factorNode.getChildren().get(1);
+        this.visit(expressionNode);
+        factorNode.setPlace(expressionNode.getPlace());
     }
 
     @Override
@@ -168,35 +234,38 @@ public class IRGenerator extends Visitor {
     @Override
     public void visitBoolFactor(ASTNode boolFactorNode) {
         switch (boolFactorNode.getChildren().getFirst().getNodeType()) {
-            case KEYWORD -> {
-                ASTNode conditionNode = boolFactorNode.getChildren().get(2);
-                this.visit(conditionNode);
-
-                boolFactorNode.setTrueList(conditionNode.getFalseList());
-                boolFactorNode.setFalseList(conditionNode.getTrueList());
-            }
-            case GROUP_SYMBOL -> {
-                ASTNode conditionNode = boolFactorNode.getChildren().get(1);
-                this.visit(conditionNode);
-
-                boolFactorNode.setTrueList(conditionNode.getTrueList());
-                boolFactorNode.setFalseList(conditionNode.getFalseList());
-            }
-            default -> {
-                ASTNode E1 = boolFactorNode.getChildren().getFirst();
-                ASTNode relOp = boolFactorNode.getChildren().get(1);
-                ASTNode E2 = boolFactorNode.getChildren().get(2);
-
-                this.visit(E1);
-                this.visit(relOp);
-                this.visit(E2);
-
-                boolFactorNode.setTrueList(new ArrayList<>(List.of(this.quadManager.nextQuad())));
-                this.quadManager.generateQuad(relOp.getPlace(), E1.getPlace(), E2.getPlace(), null);
-                boolFactorNode.setFalseList(new ArrayList<>(List.of(this.quadManager.nextQuad())));
-                this.quadManager.generateQuad("jump", null, null, null);
-            }
+            case KEYWORD -> this.boolFactorNotCondition(boolFactorNode);
+            case GROUP_SYMBOL -> this.boolFactorCondition(boolFactorNode);
+            default -> this.boolFactorRelationalOperator(boolFactorNode);
         }
+    }
+    private void boolFactorNotCondition(ASTNode boolFactorNode){
+        ASTNode conditionNode = boolFactorNode.getChildren().get(2);
+        this.visit(conditionNode);
+
+        boolFactorNode.setTrueList(conditionNode.getFalseList());
+        boolFactorNode.setFalseList(conditionNode.getTrueList());
+    }
+    private void boolFactorCondition(ASTNode boolFactorNode){
+        ASTNode conditionNode = boolFactorNode.getChildren().get(1);
+        this.visit(conditionNode);
+
+        boolFactorNode.setTrueList(conditionNode.getTrueList());
+        boolFactorNode.setFalseList(conditionNode.getFalseList());
+    }
+    private void boolFactorRelationalOperator(ASTNode boolFactorNode){
+        ASTNode E1 = boolFactorNode.getChildren().getFirst();
+        ASTNode relOp = boolFactorNode.getChildren().get(1);
+        ASTNode E2 = boolFactorNode.getChildren().get(2);
+
+        this.visit(E1);
+        this.visit(relOp);
+        this.visit(E2);
+
+        boolFactorNode.setTrueList(new ArrayList<>(List.of(this.quadManager.nextQuad())));
+        this.quadManager.generateQuad(relOp.getPlace(), E1.getPlace(), E2.getPlace(), null);
+        boolFactorNode.setFalseList(new ArrayList<>(List.of(this.quadManager.nextQuad())));
+        this.quadManager.generateQuad("jump", null, null, null);
     }
 
     @Override
@@ -325,6 +394,7 @@ public class IRGenerator extends Visitor {
         this.quadManager.backPatch(checkTrueList, this.quadManager.nextQuad());
         this.visit(sequenceNode);
         String temp = this.quadManager.newTemp();
+        this.currentScopeTemporaryVariables.add(new Variable(temp,DataType.Integer));
         this.quadManager.generateQuad("+", ID.getPlace(), stepNode.getPlace(), temp);
         this.quadManager.generateQuad(":=", ID.getPlace(), null, temp);
 
@@ -350,37 +420,25 @@ public class IRGenerator extends Visitor {
     }
 
     @Override
-    public void visitID(ASTNode IDNode) {
-        switch (IDNode.getNodeType()){
-            case VARIABLE_IDENTIFIER -> this.registerVariable(IDNode);
-            case PARAMETER_IDENTIFIER -> this.registerParameter(IDNode);
-        }
-    }
-
-
-    @Override
     public void visitProcedure(ASTNode procedureNode) {
         String procedureName = procedureNode.getChildren().get(1).getPlace();
         Procedure procedure = new Procedure(procedureName);
-        this.parameterOwnerPointer = procedure;
-        if(!this.scopeManager.addSubroutine(procedure))
-            SemanticErrors.alreadyDeclaredProcedure(procedureName, procedureNode.getLine(), procedureNode.getColumn());
+        this.currentScopeOwner = procedure;
+        this.registerProcedure(procedure,procedureNode.getChildren().getFirst().getLine(),procedureNode.getChildren().getFirst().getColumn());
 
-        int procedureTemps = this.quadManager.nextQuad();
+
         this.scopeManager.openScope();
         ASTNode formalParametersListNode =  procedureNode.getChildren().get(3);
         this.visit(formalParametersListNode);
 
         this.quadManager.generateQuad("BEGIN_BLOCK", procedureName, null, null);
-        procedure.setStartingQuad(this.quadManager.nextQuad());
 
+        procedure.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
         ASTNode procedureBlock = procedureNode.getChildren().get(5);
         this.visit(procedureBlock);
 
         this.quadManager.generateQuad("END_BLOCK", procedureName, null, null);
-
-        procedureTemps = this.quadManager.nextQuad() - procedureTemps;
-        procedure.setFrameLength(this.scopeManager.getCurrentScopeOffset() + procedureTemps);
+        this.currentScopeTemporaryVariables.forEach(temp -> procedure.getActivationRecord().addTemporaryVariable(temp));
         this.scopeManager.closeScope();
     }
 
@@ -388,24 +446,27 @@ public class IRGenerator extends Visitor {
     public void visitFunction(ASTNode functionNode) {
         String functionName = functionNode.getChildren().get(1).getPlace();
         Function function = new Function(functionName, DataType.Integer);
-        this.parameterOwnerPointer = function;
-        if(!this.scopeManager.addSubroutine(function))
-            SemanticErrors.alreadyDeclaredFunction(functionName, functionNode.getLine(), functionNode.getColumn());
+        this.registerFunction(function,functionNode.getChildren().getFirst().getLine(),functionNode.getChildren().getFirst().getColumn());
 
-        int functionTemps = this.quadManager.nextQuad();
+        this.currentScopeOwner = function;
         this.scopeManager.openScope();
+        Parameter returnParameter = new Parameter(functionName,DataType.Integer, Parameter.Mode.returnValue);
+        function.getActivationRecord().setReturnValue(returnParameter);
 
         ASTNode formalParametersListNode =  functionNode.getChildren().get(3);
         this.visit(formalParametersListNode);
 
         this.quadManager.generateQuad("BEGIN_BLOCK", functionName, null, null);
-        ASTNode functionBlock = functionNode.getChildren().get(5);
-        function.setStartingQuad(this.quadManager.nextQuad());
-        this.visit(functionBlock);
-        this.quadManager.generateQuad("END_BLOCK", functionName, null, null);
 
-        functionTemps = this.quadManager.nextQuad() - functionTemps;
-        function.setFrameLength(this.scopeManager.getCurrentScopeOffset() + functionTemps);
+        ASTNode functionBlock = functionNode.getChildren().get(5);
+        function.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
+
+
+        this.visit(functionBlock);
+
+        this.getQuadManager().generateQuad("retv",null, null, returnParameter.getName());
+        this.quadManager.generateQuad("END_BLOCK", functionName, null, null);
+        this.currentScopeTemporaryVariables.forEach(temp -> function.getActivationRecord().addTemporaryVariable(temp));
         this.scopeManager.closeScope();
     }
 
@@ -423,7 +484,7 @@ public class IRGenerator extends Visitor {
                     if(parameter == null)
                         SemanticErrors.undeclaredInOutParameter(parameterName, node.getLine(), node.getColumn());
                     else
-                        parameter.setMode(Parameter.Mode.in);
+                        parameter.setMode(Parameter.Mode.input);
                 });
     }
 
@@ -441,18 +502,39 @@ public class IRGenerator extends Visitor {
                     if(parameter == null)
                         SemanticErrors.undeclaredInOutParameter(parameterName, node.getLine(), node.getColumn());
                     else
-                        parameter.setMode(Parameter.Mode.out);
+                        parameter.setMode(Parameter.Mode.output);
                 });
     }
 
     @Override
     public void visitCallStatement(ASTNode callStatementNode) {
-        String procedureName = callStatementNode.getChildren().get(1).getPlace();
+        ASTNode IDNode = callStatementNode.getChildren().get(1);
         ASTNode idTailNode = callStatementNode.getChildren().get(2);
+        ASTNode actualParameterListNode = idTailNode.getChildren().getFirst().getChildren().get(1);
 
+        this.visit(IDNode);
+        this.legalNumberOfParametersCheck(IDNode,actualParameterListNode);
         this.visit(idTailNode);
-        this.quadManager.generateDelayedQuad("call", procedureName, null, null);
+
+        this.quadManager.generateDelayedQuad("call", null, null, IDNode.getPlace());
         this.quadManager.flashOutOfOrderQuads();
+    }
+    private void legalNumberOfParametersCheck(ASTNode IDNode, ASTNode actualParameterListNode){
+        Procedure subroutine = this.scopeManager.resolveSubroutine(IDNode.getPlace());
+
+        int subroutineParametersNumberOnCall = Math.toIntExact(
+                actualParameterListNode.getChildren()
+                        .stream()
+                        .filter(node -> node.getNodeType() == ASTNode.NodeType.ACTUAL_PARAMETER_ITEM)
+                        .count());
+
+        int subroutineParametersNumberOnDeclaration = subroutine.getActivationRecord().countFormalParameters();
+
+        if(subroutineParametersNumberOnCall != subroutineParametersNumberOnDeclaration)
+            SemanticErrors.procedureParametersOnCallError(IDNode.getPlace(),
+                    subroutineParametersNumberOnCall, subroutineParametersNumberOnDeclaration,
+                    IDNode.getLine(), IDNode.getColumn());
+
     }
 
     @Override
@@ -460,6 +542,7 @@ public class IRGenerator extends Visitor {
         switch (actualParameterItemNode.getChildren().getFirst().getNodeType()){
             case REFERENCE_OPERATOR -> {
                 ASTNode IDNode = actualParameterItemNode.getChildren().get(1);
+                this.visit(IDNode);
                 this.quadManager.generateDelayedQuad("par",IDNode.getPlace(), "ref", null);
             }
             case EXPRESSION -> {
@@ -470,31 +553,45 @@ public class IRGenerator extends Visitor {
         }
     }
 
-    @Override
-    public void visitFactor(ASTNode factorNode) {
-        switch (factorNode.getChildren().getFirst().getNodeType()) {
-            case NUMBER, VARIABLE_USAGE -> {
-                ASTNode numberORVarNode = factorNode.getChildren().getFirst();
-                this.visit(numberORVarNode);
-                factorNode.setPlace(numberORVarNode.getPlace());
-            }
-            case FUNCTION_CALL_IN_ASSIGMENT -> {
-                ASTNode IDNode = factorNode.getChildren().getFirst();
-                ASTNode idTailNode = factorNode.getChildren().get(1);
+    private void variableDeclaration(ASTNode IDNode){
+        Variable variable = new Variable(IDNode.getPlace(),DataType.Integer);
+        this.registerVariable(variable,IDNode.getLine(), IDNode.getColumn());
+        this.currentScopeOwner.getActivationRecord().addLocalVariable(variable);
+    }
+    private void parameterDeclaration(ASTNode IDNode){
+        Parameter parameter =  new Parameter(IDNode.getPlace(),DataType.Integer);
+        this.registerParameter(parameter,IDNode.getLine(),IDNode.getColumn());
+    }
 
-                this.quadManager.openDelayedQuadsLevel();
-                this.visit(idTailNode);
-                String newTemp = this.quadManager.newTemp();
-                this.quadManager.generateDelayedQuad("par", newTemp, "ret", null);
-                this.quadManager.generateDelayedQuad("call", IDNode.getPlace(), null, null);
-                this.quadManager.closeDelayedQuadsLevel();
-                factorNode.setPlace(newTemp);
-            }
-            default -> {
-                ASTNode expressionNode = factorNode.getChildren().get(1);
-                this.visit(expressionNode);
-                factorNode.setPlace(expressionNode.getPlace());
-            }
+    @Override
+    public void visitID(ASTNode IDNode) {
+        switch (IDNode.getNodeType()){
+            case VARIABLE_IDENTIFIER -> this.variableDeclaration(IDNode);
+            case PARAMETER_IDENTIFIER -> this.parameterDeclaration(IDNode);
+            case VARIABLE_USAGE -> this.resolveVariable(IDNode);
+            case SUBROUTINE_USAGE -> this.resolveSubroutine(IDNode);
+            case FUNCTION_CALL_IN_ASSIGMENT -> this.resolveFunctionCallInAssigment(IDNode);
+        }
+    }
+    private void resolveVariable(ASTNode IDNode){
+        if(this.scopeManager.resolveVariable(IDNode.getPlace()) == null
+            && !this.currentScopeOwner.getActivationRecord().getReturnValue().getName().equals(IDNode.getPlace())) {
+            SemanticErrors.undeclaredVariable(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+        }
+    }
+
+    private void resolveFunctionCallInAssigment(ASTNode IDNode){
+        Procedure subroutine;
+
+        if((subroutine = this.scopeManager.resolveSubroutine(IDNode.getPlace())) == null)
+            SemanticErrors.undeclaredSubroutine(IDNode.getPlace(),IDNode.getLine(), IDNode.getColumn());
+
+        if(!(subroutine instanceof Function))
+            SemanticErrors.procedureCallInAssigment(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+    }
+    private void resolveSubroutine(ASTNode IDNode){
+        if(this.scopeManager.resolveSubroutine(IDNode.getPlace()) == null){
+            SemanticErrors.undeclaredSubroutine(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
         }
     }
 }

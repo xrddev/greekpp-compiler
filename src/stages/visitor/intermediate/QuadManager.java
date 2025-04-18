@@ -66,5 +66,10 @@ public class QuadManager {
         for(Map.Entry<Integer, List<Quad>> entry : this.delayedQuads.entrySet()){
             this.quads.addAll(entry.getValue());
         }
+        this.delayedQuads.clear();
+    }
+
+    public List<Quad> getQuads(){
+        return this.quads;
     }
 }

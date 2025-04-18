@@ -62,7 +62,7 @@ public class Parser {
         ASTNode root = new ASTNode(ASTNode.NodeType.ROOT);
 
         root.addChild(this.keyword("πρόγραμμα"));
-        root.addChild(this.ID(ASTNode.NodeType.PROGRAM_NAME));
+        root.addChild(this.ID(ASTNode.NodeType.PROGRAM_NAME_IDENTIFIER));
         String programName = root.getChildren().getLast().getPlace();
         root.addChild(this.programBlock(programName));
 

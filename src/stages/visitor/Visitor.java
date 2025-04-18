@@ -27,11 +27,19 @@ public abstract class Visitor {
             case STEP -> this.visitStep(node);
             case PROCEDURE -> this.visitProcedure(node);
             case FUNCTION -> this.visitFunction(node);
-            case FUNCTION_IDENTIFIER, PARAMETER_IDENTIFIER,PROCEDURE_IDENTIFIER, VARIABLE_IDENTIFIER, PARAMETER_INOUT_DECLARATION -> this.visitID(node);
             case FUNCTION_INPUT -> this.visitFunctionInput(node);
             case FUNCTION_OUTPUT -> this.visitFunctionOutput(node);
             case CALL_STATEMENT -> this.visitCallStatement(node);
             case ACTUAL_PARAMETER_ITEM -> this.visitActualParameterItem(node);
+            case PROGRAM_NAME_IDENTIFIER,
+                 VARIABLE_IDENTIFIER,
+                 PARAMETER_IDENTIFIER,
+                 VARIABLE_USAGE,
+                 SUBROUTINE_USAGE,
+                 FUNCTION_CALL_IN_ASSIGMENT,
+                 FUNCTION_IDENTIFIER,
+                 PROCEDURE_IDENTIFIER,
+                 PARAMETER_USAGE -> this.visitID(node);
             default -> this.defaultVisit(node);
         }
     }

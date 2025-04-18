@@ -33,12 +33,10 @@ public class ScopeManager {
 
         private final Scope parent;
         private final SymbolTable symbolTable;
-        private int offset;
 
         public Scope(Scope parent) {
             this.symbolTable = new SymbolTable();
             this.parent = parent;
-            this.offset = 12;
         }
 
         public String toString(){
@@ -85,14 +83,6 @@ public class ScopeManager {
     private void logScope(){
         this.scopesLog.append("Closing scope    || Depth: ").append(this.depth).append("\n");
         this.scopesLog.append(this.currentScope.symbolTable).append("\n");
-    }
-
-    public int getCurrentScopeOffset(){
-        return this.currentScope.offset;
-    }
-
-    public void setCurrentScopeOffset(int offset){
-        this.currentScope.offset = offset;
     }
 
     public Variable resolveVariable(String name){
