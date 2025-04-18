@@ -1,5 +1,17 @@
 package stages.visitor.semantic.symbol;
 
 public enum DataType {
-    Integer
+    Integer(4),
+    Float(8),
+    Char(1);
+
+    private final int byteSize;
+
+    DataType(int byteSize) {
+        this.byteSize = byteSize;
+    }
+
+    public int getByteSize() {
+        return byteSize;
+    }
 }

@@ -9,15 +9,12 @@ public class Function extends Procedure {
         this.returnType = returnType;
     }
 
-
     @Override
     public String toString() {
         return "Function{" +
                 "name='" + name + '\'' +
                 ", returnType=" + returnType +
-                ", formalParameters=" + formalParameters +
-                ", frameLength=" + frameLength +
-                ", startingQuad=" + startingQuad +
+                ", activationRecord=" + activationRecord +
                 '}';
     }
 }

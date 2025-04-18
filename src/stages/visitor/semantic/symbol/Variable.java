@@ -4,10 +4,9 @@ public class Variable extends Entity {
     final DataType dataType;
     int offset;
 
-    public Variable(String name, DataType dataType, int offset){
+    public Variable(String name, DataType dataType){
         super(name);
         this.dataType = dataType;
-        this.offset = offset;
     }
 
     public DataType getDataType(){
@@ -16,8 +15,12 @@ public class Variable extends Entity {
     public int getOffset(){
         return this.offset;
     }
+    public void setOffset(int offset){
+        this.offset = offset;
+    }
 
-    public String toString(){
+    @Override
+    public String toString() {
         return "Variable{" +
                 "name='" + name + '\'' +
                 ", dataType=" + dataType +

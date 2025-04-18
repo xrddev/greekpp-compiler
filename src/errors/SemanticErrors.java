@@ -40,4 +40,38 @@ public class SemanticErrors {
         System.err.println("Aborting compilation -");
         System.exit(-1);
     }
+
+    public static void undeclaredVariable(String name , int line , int column){
+        System.err.println("Semantic Error ! || Line : " + line +" , Column : " + column + " ||");
+        System.err.println("Undeclared variable <" + name + ">");
+        System.err.println("Variable must be declared before use.");
+        System.err.println("Aborting compilation -");
+        System.exit(-1);
+    }
+
+    public static void undeclaredSubroutine(String name , int line , int column){
+        System.err.println("Semantic Error ! || Line : " + line +" , Column : " + column + " ||");
+        System.err.println("Undeclared subroutine [Function or Procedure ] call <" + name + ">");
+        System.err.println("Subroutine must be declared before use.");
+        System.err.println("Aborting compilation -");
+        System.exit(-1);
+    }
+
+    public static void procedureCallInAssigment(String name, int line, int column){
+        System.err.println("Semantic Error ! || Line : " + line +" , Column : " + column + " ||");
+        System.err.println("Illegal call of subroutine  <" + name + ">");
+        System.err.println("Subroutines cannot be called inside an assigment. They have no return value");
+        System.err.println("Aborting compilation -");
+        System.exit(-1);
+    }
+
+    public static void procedureParametersOnCallError(String name ,int declaredParameters, int onCallParameters, int line , int column){
+        System.err.println("Semantic Error ! || Line : " + line +" , Column : " + column + " ||");
+        System.err.println("Wrong number of parameters in the call statement of the subroutine [Function or Procedure] <" + name + ">");
+        System.err.println("Number of declared Parameters : " + declaredParameters);
+        System.err.println("Number of parameters found on the actually call : "  + onCallParameters);
+        System.err.println("Aborting compilation -");
+        System.exit(-1);
+    }
+
 }
