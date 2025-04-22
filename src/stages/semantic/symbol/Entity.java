@@ -1,4 +1,4 @@
-package stages.visitor.semantic.symbol;
+package stages.semantic.symbol;
 
 public abstract class Entity {
     String name;

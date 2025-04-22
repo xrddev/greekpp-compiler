@@ -1,13 +1,14 @@
-package stages.visitor.semantic.symbol;
+package stages.semantic.symbol;
 
-public class Parameter extends Variable{
+public class Parameter extends LocalVariable {
     public enum Mode{
-        input, output, returnValue;
+        input, output, returnValue , input_by_default
     }
     Mode mode;
 
     public Parameter(String name, DataType dataType) {
         super(name, dataType);
+        this.mode = Mode.input_by_default;
     }
 
     public Parameter(String name, DataType dataType, Mode mode) {

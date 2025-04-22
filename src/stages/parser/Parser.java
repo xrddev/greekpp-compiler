@@ -1,8 +1,8 @@
-package stages.astree.parser;
+package stages.parser;
 
-import stages.astree.lexer.Token;
+import stages.lexer.Token;
 import errors.ParserErrors;
-import stages.astree.lexer.Lexer;
+import stages.lexer.Lexer;
 
 public class Parser {
 
@@ -473,7 +473,7 @@ public class Parser {
                 ASTNode IDNode = this.ID(ASTNode.NodeType.VARIABLE_USAGE);
                 ASTNode IDTailNode = this.idTail();
 
-                //If idTailIs is present, identifier is function call
+                //If idTailIs is present, identifier is subroutine call
                 if(!IDTailNode.getChildren().isEmpty())
                     IDNode.setNodeType(ASTNode.NodeType.FUNCTION_CALL_IN_ASSIGMENT);
 
