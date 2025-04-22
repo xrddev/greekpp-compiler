@@ -1,7 +1,7 @@
-package stages.visitor.semantic;
+package stages.semantic;
 
-import stages.visitor.semantic.symbol.Procedure;
-import stages.visitor.semantic.symbol.Variable;
+import stages.semantic.symbol.LocalVariable;
+import stages.semantic.symbol.Procedure;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -12,7 +12,7 @@ import java.util.Map;
 public class ScopeManager {
     private static class Scope {
         private static class SymbolTable {
-            private final Map<String, Variable> variables;
+            private final Map<String, LocalVariable> variables;
             private final Map<String, Procedure> subroutines;
 
             private SymbolTable() {
@@ -20,13 +20,28 @@ public class ScopeManager {
                 this.subroutines = new HashMap<>();
             }
 
-            public String toString(){
+            public String toString() {
                 StringBuilder sb = new StringBuilder();
                 sb.append("Variables:\n");
-                this.variables.forEach((name, variable) -> sb.append("    ").append(variable).append("\n"));
+                if (variables.isEmpty()) {
+                    sb.append("  (none)\n");
+                } else {
+                    variables.values().forEach(v -> sb.append("  ").append(v.toString()).append("\n"));
+                }
+
                 sb.append("Subroutines:\n");
-                this.subroutines.forEach((name, subroutine) -> sb.append("    ").append(subroutine).append("\n"));
-                sb.append("---\n---");
+                if (subroutines.isEmpty()) {
+                    sb.append("  (none)\n");
+                } else {
+                    subroutines.values().forEach(s -> {
+                        String[] lines = s.toString().split("\n");
+                        for (String line : lines) {
+                            sb.append("  ").append(line).append("\n");
+                        }
+                    });
+                }
+
+                sb.append("---\n");
                 return sb.toString();
             }
         }
@@ -65,11 +80,11 @@ public class ScopeManager {
         this.currentScope = this.currentScope.parent;
         this.depth--;
     }
-    public boolean addVariable(Variable variable) {
-        if(this.currentScope.symbolTable.variables.containsKey(variable.getName())){
+    public boolean addVariable(LocalVariable localVariable) {
+        if(this.currentScope.symbolTable.variables.containsKey(localVariable.getName())){
             return false;
         }
-        this.currentScope.symbolTable.variables.put(variable.getName(), variable);
+        this.currentScope.symbolTable.variables.put(localVariable.getName(), localVariable);
         return true;
     }
     public boolean addSubroutine(Procedure subroutine) {
@@ -85,7 +100,12 @@ public class ScopeManager {
         this.scopesLog.append(this.currentScope.symbolTable).append("\n");
     }
 
-    public Variable resolveVariable(String name){
+
+    public Scope getCurrentScope() {
+        return this.currentScope;
+    }
+
+    public LocalVariable resolveVariable(String name){
         Scope scope = this.currentScope;
         while(scope != null){
             if(scope.symbolTable.variables.containsKey(name)){
@@ -109,7 +129,7 @@ public class ScopeManager {
 
     public void printScopesLog() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("greekpp.sym"))) {
-            writer.write(scopesLog.toString()); // Γράφει τα περιεχόμενα του scopesLog στο αρχείο
+            writer.write(scopesLog.toString());
             System.out.println("Scope logs have been successfully written to the file greekpp.sym");
         } catch (IOException e) {
             System.err.println("Error while writing scope logs to the file: " + e.getMessage());

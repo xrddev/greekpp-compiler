@@ -1,4 +1,4 @@
-package stages.visitor.intermediate;
+package stages.intermediate.generation;
 
 public class Quad {
     private final String operator;
@@ -15,6 +15,35 @@ public class Quad {
 
     public void setResult(String result){
         this.result = result;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public String getOperand1() {
+        return operand1;
+    }
+
+    public String getOperand2() {
+        return operand2;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public boolean operatorIsAddOperator(){
+        if(this.operator == null) return false;
+        return switch (this.operator){
+            case "+", "-", "*", "/" -> true;
+            default -> false;
+        };
+    }
+
+    public boolean operatorIsEqualSign(){
+        if (this.operator == null) return false;
+        return this.operator.equals(":=");
     }
 
     @Override

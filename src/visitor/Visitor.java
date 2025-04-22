@@ -1,6 +1,6 @@
-package stages.visitor;
+package visitor;
 
-import stages.astree.parser.ASTNode;
+import stages.parser.ASTNode;
 
 // Abstract Visitor class with default (empty) implementations
 public abstract class Visitor {
@@ -49,7 +49,6 @@ public abstract class Visitor {
         node.getChildren().forEach(this::visit);
     }
 
-
     public abstract void visitProgramBlock(ASTNode node);
     public abstract void visitProgramEndKeyword(ASTNode node);
     public abstract void visitInputStatement(ASTNode node);
@@ -75,6 +74,5 @@ public abstract class Visitor {
     public abstract void visitFunctionOutput(ASTNode node);
     public abstract void visitCallStatement(ASTNode node);
     public abstract void visitActualParameterItem(ASTNode node);
-
 }
 

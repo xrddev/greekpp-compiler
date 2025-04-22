@@ -1,4 +1,4 @@
-package stages.astree.lexer;
+package stages.lexer;
 
 public enum CharacterType {
     EOF,

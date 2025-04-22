@@ -1,4 +1,4 @@
-package stages.visitor.intermediate;
+package stages.intermediate.generation;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -13,7 +13,8 @@ public class QuadManager {
 
     public QuadManager(){
         this.quads = new ArrayList<>();
-        this.quads.add(null); //Placeholder, so quads labeling starts from 1, and everyone is the same ;) . I prefer starting from 0 tho ;)
+        this.quads.add( //Placeholder, so quads labeling starts from 1, and everyone is the same ;) . I prefer starting from 0 tho ;)
+                new Quad("$","$","$","0"));
         this.tempCounter = 1;
         this.delayedQuads = new TreeMap<>(Comparator.reverseOrder());
         this.delayedQuadsBucketCount = 0;

@@ -1,4 +1,4 @@
-package stages.astree.parser;
+package stages.parser;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -130,10 +130,6 @@ public class ASTNode {
 
     public int getColumn() {
         return this.column;
-    }
-
-    public long getId() {
-        return this.id;
     }
 
     public void printNodeInfo(){

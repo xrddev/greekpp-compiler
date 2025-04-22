@@ -1,7 +1,7 @@
 package errors;
 
 
-import stages.astree.lexer.Token;
+import stages.lexer.Token;
 
 public class ParserErrors {
 

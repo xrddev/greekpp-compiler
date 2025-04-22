@@ -1,6 +1,6 @@
 package errors;
 
-import stages.astree.parser.DFAState;
+import stages.parser.DFAState;
 
 public final class LexerErrors {
     private LexerErrors(){

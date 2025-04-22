@@ -1,4 +1,4 @@
-package stages.visitor.semantic.symbol;
+package stages.semantic.symbol;
 
 public enum DataType {
     Integer(4),

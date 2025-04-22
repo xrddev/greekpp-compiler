@@ -1,10 +1,10 @@
-package stages.visitor.semantic.symbol;
+package stages.semantic.symbol;
 
-public class Variable extends Entity {
+public class LocalVariable extends Entity {
     final DataType dataType;
     int offset;
 
-    public Variable(String name, DataType dataType){
+    public LocalVariable(String name, DataType dataType){
         super(name);
         this.dataType = dataType;
     }
@@ -21,7 +21,7 @@ public class Variable extends Entity {
 
     @Override
     public String toString() {
-        return "Variable{" +
+        return "LocalVariable{" +
                 "name='" + name + '\'' +
                 ", dataType=" + dataType +
                 ", offset=" + offset +
