@@ -472,6 +472,7 @@ public class IRGenerator extends Visitor {
 
         this.quadManager.generateQuad("END_BLOCK", procedureName, null, null);
         this.currentScopeTemporaryVariables.forEach(temp -> procedure.getActivationRecord().addTemporaryVariable(temp));
+        this.currentScopeTemporaryVariables.clear();
         this.scopeManager.closeScope();
     }
 
@@ -503,6 +504,7 @@ public class IRGenerator extends Visitor {
         this.getQuadManager().generateQuad("retv",null, null, returnParameter.getName());
         this.quadManager.generateQuad("END_BLOCK", functionName, null, null);
         this.currentScopeTemporaryVariables.forEach(temp -> function.getActivationRecord().addTemporaryVariable(temp));
+        this.currentScopeTemporaryVariables.clear();
         this.scopeManager.closeScope();
     }
 
