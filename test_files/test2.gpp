@@ -1,31 +1,24 @@
-πρόγραμμα TestNested
+πρόγραμμα ex1
+δήλωση a, b,c,d, g
 
-δήλωση a, b, outerResult
-δήλωση n, result
 
-συνάρτηση outerFunction(x, y, outerResult)
+συνάρτηση P1(x,y)
 διαπροσωπεία
-    είσοδος x, y
-    έξοδος outerResult
-    δήλωση temp, innerResult
+είσοδος x
+έξοδος y
+
+αρχή_συνάρτησης
+y := y - 1;
+εάν x = 1 τότε
+	P1 :=  x
+αλλιώς
+	P1 := P1(x -1 , %y )
+εάν_τέλος
 
 
-
-          αρχή_συνάρτησης
-               temp := x + y;
-               εκτέλεσε innerFunction(temp, innerResult);
-               outerResult := temp + innerResult
-          τέλος_συνάρτησης
-
-
-διαδικασία printResult(val)
-διαπροσωπεία
-    είσοδος val
-          αρχή_διαδικασίας
-               γράψε val
-          τέλος_διαδικασίας
+τέλος_συνάρτησης
 
 
 αρχή_προγράμματος
-α := 1
+g := P1(a,b) / 2
 τέλος_προγράμματος

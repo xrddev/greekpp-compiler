@@ -30,6 +30,8 @@ public class GreekPP {
         irGenerator.getQuadManager().printQuads();
         irGenerator.getScopeManager().printScopesLog();
 
+
+        System.out.println(parser.getABSRoot());
         //Step 4 - Quads optimization;
         //IROptimizer irOptimizer = new IROptimizer(irGenerator.getQuadManager().getQuads());
 

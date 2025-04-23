@@ -149,7 +149,10 @@ public class IRGenerator extends Visitor {
     public void visitFactor(ASTNode factorNode) {
         switch (factorNode.getChildren().getFirst().getNodeType()) {
             case NUMBER, VARIABLE_USAGE -> this.numberOrVariableFactor(factorNode);
-            case FUNCTION_CALL_IN_ASSIGMENT -> this.functionCallInAssigmentFactor(factorNode);
+            case FUNCTION_CALL_IN_ASSIGMENT -> {
+                this.functionCallInAssigmentFactor(factorNode);
+                this.quadManager.flashOutOfOrderQuads();
+            }
             default -> this.expressionFactor(factorNode);
         }
     }
@@ -316,10 +319,6 @@ public class IRGenerator extends Visitor {
 
         ASTNode expressionNode = assignmentStatementNode.getChildren().get(3);
         this.visit(expressionNode);
-
-        ASTNode factorID = expressionNode.getChildren().get(1).getChildren().getFirst().getChildren().getFirst();
-        if(factorID.getNodeType() == ASTNode.NodeType.FUNCTION_CALL_IN_ASSIGMENT)
-            this.quadManager.flashOutOfOrderQuads();
 
         this.quadManager.generateQuad(":=",expressionNode.getPlace() , null, variableUsageNode.getPlace());
     }
