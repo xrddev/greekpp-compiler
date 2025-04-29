@@ -127,10 +127,10 @@ public class ScopeManager {
         return null;
     }
 
-    public void printScopesLog() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("greekpp.sym"))) {
+    public void printScopesLog(String programName) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(programName + ".sym"))) {
             writer.write(scopesLog.toString());
-            System.out.println("Scope logs have been successfully written to the file greekpp.sym");
+            System.out.println("Scope logs have been successfully written to the file " + programName + ".sym" );
         } catch (IOException e) {
             System.err.println("Error while writing scope logs to the file: " + e.getMessage());
         }

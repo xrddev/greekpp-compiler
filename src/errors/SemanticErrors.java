@@ -80,5 +80,4 @@ public class SemanticErrors {
         System.err.println("Aborting compilation -");
         System.exit(-1);
     }
-
 }

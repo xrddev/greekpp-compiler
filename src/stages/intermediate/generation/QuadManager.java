@@ -43,14 +43,25 @@ public class QuadManager {
         trueFalseList.forEach(label -> this.quads.get(label).setResult(String.valueOf(targetLabel)));
     }
 
-    public void printQuads() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("greekpp.int"))) {
+    public void printQuadsWithTabs(String programName) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(programName + ".int"))) {
             int maxDigits = String.valueOf(this.quads.size() - 1).length();
             String format = "%" + maxDigits + "d : ";
 
             for (int i = 1; i < this.quads.size(); i++) {
                 writer.write(String.format(format, i) + this.quads.get(i));
                 writer.newLine();
+            }
+            System.out.println("Quads have been successfully written to the file" + programName + ".int");
+        } catch (IOException e) {
+            System.err.println("Error while writing to the file: " + e.getMessage());
+        }
+    }
+
+    public void printQuads(){
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("greekpp.int"))) {
+            for(int i = 1; i < this.quads.size(); i++){
+                writer.write(String.format("%d : %s\n", i, this.quads.get(i)));
             }
             System.out.println("Quads have been successfully written to the file greekpp.int");
         } catch (IOException e) {

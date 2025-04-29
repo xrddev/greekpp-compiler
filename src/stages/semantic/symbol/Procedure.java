@@ -21,7 +21,6 @@ public class Procedure extends Entity {
     }
 
 
-
     private String indent(String text, String prefix) {
         StringBuilder result = new StringBuilder();
         for (String line : text.split("\n")) {
@@ -29,6 +28,4 @@ public class Procedure extends Entity {
         }
         return result.toString();
     }
-
-
 }

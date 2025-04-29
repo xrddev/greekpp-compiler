@@ -2,6 +2,9 @@ package stages.intermediate.optimaization;
 
 import stages.intermediate.generation.Quad;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class IROptimizer {
@@ -13,7 +16,6 @@ public class IROptimizer {
             quadMap.put(i, quadList.get(i));
         }
         this.optimize();
-        quadMap.forEach((k,v) -> System.out.println(k + " : " + v));
     }
 
     private void optimize(){
@@ -124,6 +126,21 @@ public class IROptimizer {
             return quad;
         });
     }
-}
 
+    public void printOptimizedQuads(){
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("greekpp_OPTIMIZED_QUADS.int"))) {
+            int maxDigits = String.valueOf(this.quadMap.size() - 1).length();
+            String format = "%" + maxDigits + "d : ";
+
+            for(int i = 1; i < this.quadMap.size(); i++){
+                writer.write(String.format(format, i) + this.quadMap.get(i));
+                writer.newLine();
+            }
+
+            System.out.println("Quads have been successfully written to the file greekpp_OPTIMIZED_QUADS.int");
+        } catch (IOException e) {
+            System.err.println("Error while writing to the file: " + e.getMessage());
+        }
+    }
+}
 

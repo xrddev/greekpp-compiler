@@ -44,7 +44,6 @@ public abstract class Visitor {
         }
     }
 
-
     public void defaultVisit(ASTNode node) {
         node.getChildren().forEach(this::visit);
     }

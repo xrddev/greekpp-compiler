@@ -44,14 +44,15 @@ public class IRGenerator extends Visitor {
         ASTNode sequenceNode = programBlockNode.getChildren().get(3);
         ASTNode programEndNode = programBlockNode.getChildren().get(4);
 
-
+        Procedure mainMethod = this.currentScopeOwner;
         this.visit(declarationsNode);
         this.visit(subprogramsNode);
 
-        this.quadManager.generateQuad("BEGIN_BLOCK", programBlockNode.getPlace(), null, null);
+        this.quadManager.generateQuad("begin_block", programBlockNode.getPlace(), null, null);
+        mainMethod.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
         this.visit(sequenceNode);
         this.visit(programEndNode);
-        this.quadManager.generateQuad("END_BLOCK", programBlockNode.getPlace(), null, null);
+        this.quadManager.generateQuad("end_block", programBlockNode.getPlace(), null, null);
 
         this.scopeManager.closeScope(); //Scope Manager constructor automatically opens the base scope.
     }
@@ -59,7 +60,7 @@ public class IRGenerator extends Visitor {
 
     @Override
     public void visitProgramEndKeyword(ASTNode programEndNode) {
-        this.quadManager.generateQuad("HALT_", null, null, null);
+        this.quadManager.generateQuad("halt", null, null, null);
     }
 
     @Override
@@ -463,13 +464,22 @@ public class IRGenerator extends Visitor {
         ASTNode formalParametersListNode =  procedureNode.getChildren().get(3);
         this.visit(formalParametersListNode);
 
-        this.quadManager.generateQuad("BEGIN_BLOCK", procedureName, null, null);
-        procedure.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
-
         ASTNode procedureBlock = procedureNode.getChildren().get(5);
-        this.visit(procedureBlock);
+        ASTNode functionInput = procedureBlock.getChildren().get(1);
+        ASTNode functionOutput = procedureBlock.getChildren().get(2);
+        ASTNode declarations = procedureBlock.getChildren().get(3);
+        ASTNode subprograms = procedureBlock.getChildren().get(4);
+        ASTNode sequence = procedureBlock.getChildren().get(6);
 
-        this.quadManager.generateQuad("END_BLOCK", procedureName, null, null);
+        this.visit(functionInput);
+        this.visit(functionOutput);
+        this.visit(declarations);
+        this.visit(subprograms);
+        this.quadManager.generateQuad("begin_block", procedureName, null, null);
+        procedure.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
+        this.visit(sequence);
+
+        this.quadManager.generateQuad("end_block", procedureName, null, null);
         this.currentScopeTemporaryVariables.forEach(temp -> procedure.getActivationRecord().addTemporaryVariable(temp));
         this.currentScopeTemporaryVariables.clear();
         this.scopeManager.closeScope();
@@ -488,20 +498,29 @@ public class IRGenerator extends Visitor {
         this.scopeManager.openScope();
 
         Parameter returnParameter = new Parameter(functionName,DataType.Integer, Parameter.Mode.returnValue);
-        function.getActivationRecord().setReturnValue(returnParameter);
+        //ToDo
+        //Return parameter handle will be clear on phase 3
 
         ASTNode formalParametersListNode =  functionNode.getChildren().get(3);
         this.visit(formalParametersListNode);
 
-        this.quadManager.generateQuad("BEGIN_BLOCK", functionName, null, null);
-        function.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
-
-
         ASTNode functionBlock = functionNode.getChildren().get(5);
-        this.visit(functionBlock);
+        ASTNode functionInput = functionBlock.getChildren().get(1);
+        ASTNode functionOutput = functionBlock.getChildren().get(2);
+        ASTNode declarations = functionBlock.getChildren().get(3);
+        ASTNode subprograms = functionBlock.getChildren().get(4);
+        ASTNode sequence = functionBlock.getChildren().get(6);
+
+        this.visit(functionInput);
+        this.visit(functionOutput);
+        this.visit(declarations);
+        this.visit(subprograms);
+        this.quadManager.generateQuad("begin_block", functionName, null, null);
+        function.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
+        this.visit(sequence);
 
         this.getQuadManager().generateQuad("retv",null, null, returnParameter.getName());
-        this.quadManager.generateQuad("END_BLOCK", functionName, null, null);
+        this.quadManager.generateQuad("end_block", functionName, null, null);
         this.currentScopeTemporaryVariables.forEach(temp -> function.getActivationRecord().addTemporaryVariable(temp));
         this.currentScopeTemporaryVariables.clear();
         this.scopeManager.closeScope();

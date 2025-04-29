@@ -7,7 +7,6 @@ public final class LexerErrors {
         throw new UnsupportedOperationException("This is a static class only for error messages. No objects allowed");
     }
 
-
     public static void IllegalStateTransition(Character character, DFAState errorState, int line, int column){
         System.err.println("Lexical Error ! || Line : " + line +" , Column : " + column + " ||");
         System.err.println("Character <" + character + "> at illegal position.");
