@@ -47,9 +47,6 @@ public class ActivationRecord {
         return this.formalParameters.size();
     }
 
-    public void setReturnValue(Parameter returnValue) {
-        this.returnValue = returnValue;
-    }
 
     @Override
     public String toString() {

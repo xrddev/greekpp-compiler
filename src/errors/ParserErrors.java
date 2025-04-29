@@ -77,7 +77,6 @@ public class ParserErrors {
         System.exit(-1);
     }
 
-
     public static void assigmentOperatorExpected(String identifier, int line , int column){
         System.err.println("Syntax error || Line : " + line + " Column : " + column + " ||");
         System.err.println("Illegal identifier <" + identifier + ">");
