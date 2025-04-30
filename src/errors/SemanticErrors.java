@@ -1,6 +1,6 @@
 package errors;
 
-public class SemanticErrors {
+public final class SemanticErrors {
     private SemanticErrors(){
         throw new UnsupportedOperationException("This is a static class only for error messages. No objects allowed");
     }

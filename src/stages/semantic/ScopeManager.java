@@ -101,10 +101,6 @@ public class ScopeManager {
     }
 
 
-    public Scope getCurrentScope() {
-        return this.currentScope;
-    }
-
     public LocalVariable resolveVariable(String name){
         Scope scope = this.currentScope;
         while(scope != null){
