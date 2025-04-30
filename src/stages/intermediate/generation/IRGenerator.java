@@ -53,7 +53,8 @@ public class IRGenerator extends Visitor {
         this.visit(sequenceNode);
         this.visit(programEndNode);
         this.quadManager.generateQuad("end_block", programBlockNode.getPlace(), null, null);
-
+        this.currentScopeTemporaryVariables.forEach(temp -> mainMethod.getActivationRecord().addTemporaryVariable(temp));
+        this.currentScopeTemporaryVariables.clear();
         this.scopeManager.closeScope(); //Scope Manager constructor automatically opens the base scope.
     }
 

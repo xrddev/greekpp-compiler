@@ -3,7 +3,7 @@ package errors;
 
 import stages.lexer.Token;
 
-public class ParserErrors {
+public final class ParserErrors {
 
     private ParserErrors() {
         throw new UnsupportedOperationException("This is a static class only for error messages. No objects allowed");
