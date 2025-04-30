@@ -16,7 +16,7 @@ public class QuadManager {
         this.quads.add( //Placeholder, so quads labeling starts from 1 as the given examples are. I prefer starting from 0 tho ;)
                 new Quad("$","$","$","0"));
         this.tempCounter = 1;
-        this.delayedQuads = new TreeMap<>(Comparator.reverseOrder());
+        this.delayedQuads = new TreeMap<>();
         this.delayedQuadsBucketCount = 0;
     }
 
@@ -39,6 +39,9 @@ public class QuadManager {
         return "$T_" + this.tempCounter++;
     }
 
+    public int getDelayedQuadsBucketCount() {
+        return delayedQuadsBucketCount;
+    }
 
     public void backPatch(List<Integer> trueFalseList, int targetLabel){
         trueFalseList.forEach(label -> this.quads.get(label).setResult(String.valueOf(targetLabel)));
@@ -65,32 +68,11 @@ public class QuadManager {
     }
 
     public void flashDelayedQuads(){
-        for(Map.Entry<Integer, List<Quad>> entry : this.delayedQuads.entrySet()){
-            this.quads.addAll(entry.getValue());
-        }
-        this.delayedQuads.clear();
-    }
-
-    public void moveExpressionQuadsThatShouldFollowDelayedQuads(int delayedQuadsStart, String functionCallReturnTemp){
-        List<Quad> quadsToMove = new ArrayList<>();
-        Quad quad;
-        do{
-            quad = this.quads.get(delayedQuadsStart);
-            this.quads.remove(delayedQuadsStart--);
-            quadsToMove.add(quad);
-        }while (!quad.getOperand1().equals(functionCallReturnTemp));
-        this.quads.addAll(quadsToMove.reversed());
-    }
-
-    public int getDelayedQuadsHashMapSize(){
-        return this.delayedQuads.size();
+        this.quads.addAll(this.delayedQuads.get(this.delayedQuadsBucketCount));
+        this.delayedQuads.remove(this.delayedQuadsBucketCount);
     }
 
     public List<Quad> getQuads(){
         return this.quads;
-    }
-
-    public Quad getQuadWithLabel(int label){
-        return this.quads.get(label);
     }
 }

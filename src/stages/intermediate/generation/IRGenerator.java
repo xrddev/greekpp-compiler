@@ -175,7 +175,7 @@ public class IRGenerator extends Visitor {
         this.quadManager.generateDelayedQuad("par", temp, "ret", null);
         this.quadManager.generateDelayedQuad("call", null, null, IDNode.getPlace());
 
-
+        this.quadManager.flashDelayedQuads();
         this.quadManager.closeDelayedQuadsLevel();
         factorNode.setPlace(temp);
     }
@@ -319,22 +319,7 @@ public class IRGenerator extends Visitor {
         ASTNode expressionNode = assignmentStatementNode.getChildren().get(3);
 
         this.visit(expressionNode);
-        this.handleDelayedQuadsAndExpressions(expressionNode.getPlace());
         this.quadManager.generateQuad(":=",expressionNode.getPlace() , null, variableUsageNode.getPlace());
-    }
-
-
-    private void handleDelayedQuadsAndExpressions(String expressionReturnTemp){
-        if(this.quadManager.getDelayedQuadsHashMapSize() > 0) {
-            int labelJustBeforeDelayedQuads = this.quadManager.nextQuad() - 1;
-            this.quadManager.flashDelayedQuads();
-            //The last ret temp of the delayed quads chain always will always be in the second to last quad.
-            String functionCallReturnTemp = this.quadManager.getQuadWithLabel(this.quadManager.nextQuad() - 2).getOperand1();
-
-            if(!expressionReturnTemp.equals(functionCallReturnTemp)){
-                this.quadManager.moveExpressionQuadsThatShouldFollowDelayedQuads(labelJustBeforeDelayedQuads, functionCallReturnTemp);
-            }
-        }
     }
 
 
@@ -364,7 +349,6 @@ public class IRGenerator extends Visitor {
 
         this.visit(ID);
         this.visit(expression1);
-        this.handleDelayedQuadsAndExpressions(expression1.getPlace());
         this.quadManager.generateQuad(":=", ID.getPlace(), null, expression1.getPlace());
 
         this.visit(expression2);
@@ -440,14 +424,17 @@ public class IRGenerator extends Visitor {
         ASTNode idTailNode = callStatementNode.getChildren().get(2);
         ASTNode actualParameterListNode = idTailNode.getChildren().getFirst().getChildren().get(1);
 
+        this.quadManager.openDelayedQuadsLevel();
+
         this.visit(IDNode);
         this.legalNumberOfParametersCheck(IDNode,actualParameterListNode);
         this.visit(idTailNode);
 
         this.quadManager.generateDelayedQuad("call", null, null, IDNode.getPlace());
-        this.quadManager.flashDelayedQuads();
-    }
 
+        this.quadManager.flashDelayedQuads();
+        this.quadManager.closeDelayedQuadsLevel();
+    }
 
     @Override
     public void visitActualParameterItem(ASTNode actualParameterItemNode) {
