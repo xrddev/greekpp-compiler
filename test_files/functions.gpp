@@ -37,13 +37,12 @@
 
 	αρχή_συνάρτησης
 	out :=  max(n1, max(n2, max(n3, max(n4, n5))));
-	add_and_find_max := n1 + n2 + n3 + n4 + n5
+	add_and_find_max := n1 + n2 + n3 + n4 + n5;
+	b := max(c , max(12/4 , 2 + 1) + 28 ) / 32;
+    d := min(1 ,2 , %a )
 	τέλος_συνάρτησης
-
 
 	αρχή_προγράμματος
 		a := add_and_find_max(2,4,6,8,10, %b);
-		b := ( max(c , max(12/4 , 2 + 1) + 28 ) / 32;
-		d := min(1 ,2 , %a );
 		γράψε a
 	τέλος_προγράμματος
