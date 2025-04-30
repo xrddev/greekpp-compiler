@@ -13,7 +13,7 @@ public class QuadManager {
 
     public QuadManager(){
         this.quads = new ArrayList<>();
-        this.quads.add( //Placeholder, so quads labeling starts from 1, and everyone is the same ;) . I prefer starting from 0 tho ;)
+        this.quads.add( //Placeholder, so quads labeling starts from 1 as the given examples are. I prefer starting from 0 tho ;)
                 new Quad("$","$","$","0"));
         this.tempCounter = 1;
         this.delayedQuads = new TreeMap<>(Comparator.reverseOrder());
@@ -39,11 +39,12 @@ public class QuadManager {
         return "$T_" + this.tempCounter++;
     }
 
+
     public void backPatch(List<Integer> trueFalseList, int targetLabel){
         trueFalseList.forEach(label -> this.quads.get(label).setResult(String.valueOf(targetLabel)));
     }
 
-    public void printQuadsWithTabs(String programName) {
+    public void printQuads(String programName) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(programName + ".int"))) {
             int maxDigits = String.valueOf(this.quads.size() - 1).length();
             String format = "%" + maxDigits + "d : ";
@@ -52,18 +53,7 @@ public class QuadManager {
                 writer.write(String.format(format, i) + this.quads.get(i));
                 writer.newLine();
             }
-            System.out.println("Quads have been successfully written to the file" + programName + ".int");
-        } catch (IOException e) {
-            System.err.println("Error while writing to the file: " + e.getMessage());
-        }
-    }
-
-    public void printQuads(){
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("greekpp.int"))) {
-            for(int i = 1; i < this.quads.size(); i++){
-                writer.write(String.format("%d : %s\n", i, this.quads.get(i)));
-            }
-            System.out.println("Quads have been successfully written to the file greekpp.int");
+            System.out.println("Quads have been successfully written to the file " + programName + ".int");
         } catch (IOException e) {
             System.err.println("Error while writing to the file: " + e.getMessage());
         }
@@ -74,14 +64,33 @@ public class QuadManager {
         this.delayedQuads.computeIfAbsent(this.delayedQuadsBucketCount, k -> new ArrayList<>()).add(quad);
     }
 
-    public void flashOutOfOrderQuads(){
+    public void flashDelayedQuads(){
         for(Map.Entry<Integer, List<Quad>> entry : this.delayedQuads.entrySet()){
             this.quads.addAll(entry.getValue());
         }
         this.delayedQuads.clear();
     }
 
+    public void moveExpressionQuadsThatShouldFollowDelayedQuads(int delayedQuadsStart, String functionCallReturnTemp){
+        List<Quad> quadsToMove = new ArrayList<>();
+        Quad quad;
+        do{
+            quad = this.quads.get(delayedQuadsStart);
+            this.quads.remove(delayedQuadsStart--);
+            quadsToMove.add(quad);
+        }while (!quad.getOperand1().equals(functionCallReturnTemp));
+        this.quads.addAll(quadsToMove.reversed());
+    }
+
+    public int getDelayedQuadsHashMapSize(){
+        return this.delayedQuads.size();
+    }
+
     public List<Quad> getQuads(){
         return this.quads;
+    }
+
+    public Quad getQuadWithLabel(int label){
+        return this.quads.get(label);
     }
 }
