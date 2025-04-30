@@ -1,4 +1,3 @@
-import stages.intermediate.optimaization.IROptimizer;
 import stages.parser.ASTNode;
 import stages.lexer.CharStream;
 import stages.lexer.Lexer;
@@ -35,12 +34,8 @@ public class GreekPP {
 
         System.out.println("-------");
         String filename = Paths.get(args[0]).getFileName().toString();
-        irGenerator.getQuadManager().printQuadsWithTabs(filename.substring(0, filename.lastIndexOf('.')));
+        irGenerator.getQuadManager().printQuads(filename.substring(0, filename.lastIndexOf('.')));
         irGenerator.getScopeManager().printScopesLog(filename.substring(0, filename.lastIndexOf('.')));
-
-         //Step 4 - Quads optimization [Optional]
-        //IROptimizer irOptimizer = new IROptimizer(irGenerator.getQuadManager().getQuads());
-       //irOptimizer.printOptimizedQuads();
     }
 }
 

@@ -177,7 +177,6 @@ public class IRGenerator extends Visitor {
 
 
         this.quadManager.closeDelayedQuadsLevel();
-        this.quadManager.flashOutOfOrderQuads();
         factorNode.setPlace(temp);
     }
     private void expressionFactor(ASTNode factorNode){
@@ -318,9 +317,24 @@ public class IRGenerator extends Visitor {
         this.visit(variableUsageNode);
 
         ASTNode expressionNode = assignmentStatementNode.getChildren().get(3);
-        this.visit(expressionNode);
 
+        this.visit(expressionNode);
+        this.handleDelayedQuadsAndExpressions(expressionNode.getPlace());
         this.quadManager.generateQuad(":=",expressionNode.getPlace() , null, variableUsageNode.getPlace());
+    }
+
+
+    private void handleDelayedQuadsAndExpressions(String expressionReturnTemp){
+        if(this.quadManager.getDelayedQuadsHashMapSize() > 0) {
+            int labelJustBeforeDelayedQuads = this.quadManager.nextQuad() - 1;
+            this.quadManager.flashDelayedQuads();
+            //The last ret temp of the delayed quads chain always will always be in the second to last quad.
+            String functionCallReturnTemp = this.quadManager.getQuadWithLabel(this.quadManager.nextQuad() - 2).getOperand1();
+
+            if(!expressionReturnTemp.equals(functionCallReturnTemp)){
+                this.quadManager.moveExpressionQuadsThatShouldFollowDelayedQuads(labelJustBeforeDelayedQuads, functionCallReturnTemp);
+            }
+        }
     }
 
 
@@ -350,6 +364,7 @@ public class IRGenerator extends Visitor {
 
         this.visit(ID);
         this.visit(expression1);
+        this.handleDelayedQuadsAndExpressions(expression1.getPlace());
         this.quadManager.generateQuad(":=", ID.getPlace(), null, expression1.getPlace());
 
         this.visit(expression2);
@@ -430,7 +445,7 @@ public class IRGenerator extends Visitor {
         this.visit(idTailNode);
 
         this.quadManager.generateDelayedQuad("call", null, null, IDNode.getPlace());
-        this.quadManager.flashOutOfOrderQuads();
+        this.quadManager.flashDelayedQuads();
     }
 
 
