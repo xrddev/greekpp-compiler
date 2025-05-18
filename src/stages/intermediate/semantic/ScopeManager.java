@@ -1,11 +1,13 @@
-package stages.semantic;
+package stages.intermediate.semantic;
 
-import stages.semantic.symbol.LocalVariable;
-import stages.semantic.symbol.Procedure;
+import errors.SemanticErrors;
+import stages.intermediate.semantic.symbol.*;
+import stages.parser.ASTNode;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,9 +28,11 @@ public class ScopeManager {
                 if (variables.isEmpty()) {
                     sb.append("  (none)\n");
                 } else {
-                    variables.values().forEach(v -> sb.append("  ").append(v.toString()).append("\n"));
+                    variables.values()
+                            .stream()
+                            .sorted(Comparator.comparingInt(LocalVariable::getOffset).reversed())
+                            .forEach(v -> sb.append("  ").append(v.toString()).append("\n"));
                 }
-
                 sb.append("Subroutines:\n");
                 if (subroutines.isEmpty()) {
                     sb.append("  (none)\n");
@@ -69,6 +73,10 @@ public class ScopeManager {
         this.currentScope = new Scope(null);
         this.scopesLog = new StringBuilder();
         this.depth = 0;
+    }
+
+    public int getDepth(){
+        return this.depth;
     }
 
     public void openScope() {
@@ -132,4 +140,55 @@ public class ScopeManager {
         }
     }
 
+
+    public void declareVariable(ASTNode IDNode, Procedure currentScopeOwner){
+        LocalVariable localVariable = new LocalVariable(IDNode.getPlace(), DataType.Integer, this.getDepth());
+        if(!this.addVariable(localVariable))
+            SemanticErrors.alreadyDeclaredVariable(localVariable.getName(), IDNode.getLine(), IDNode.getColumn());
+        currentScopeOwner.getActivationRecord().addLocalVariable(localVariable);
+    }
+
+
+    public void declareParameter(ASTNode IDNode, Procedure currentScopeOwner){
+        Parameter parameter =  new Parameter(IDNode.getPlace(),DataType.Integer, this.getDepth());
+        currentScopeOwner.getActivationRecord().addFormalParameter(parameter);
+        if(!this.addVariable(parameter))
+            SemanticErrors.alreadyDeclaredParameter(parameter.getName(), IDNode.getLine(), IDNode.getColumn());
+    }
+
+
+    public void declareFunction(Function function, int line , int column){
+        if(!this.addSubroutine(function))
+            SemanticErrors.alreadyDeclaredFunction(function.getName(), line, column);
+    }
+
+
+    public void declareProcedure(Procedure procedure, int line , int column){
+        if(!this.addSubroutine(procedure))
+            SemanticErrors.alreadyDeclaredProcedure(procedure.getName(), line, column);
+    }
+
+
+
+
+    public void resolveVariable(ASTNode IDNode){
+        if(this.resolveVariable(IDNode.getPlace()) == null && this.resolveSubroutine(IDNode.getPlace()) == null) //Function return parameter has the same name as the function
+            SemanticErrors.undeclaredVariable(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+    }
+
+
+    public void resolveSubroutine(ASTNode IDNode){
+        if(this.resolveSubroutine(IDNode.getPlace()) == null)
+            SemanticErrors.undeclaredSubroutine(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+    }
+
+    public void resolveFunctionInAssigment(ASTNode IDNode){
+        Procedure subroutine;
+
+        if((subroutine = this.resolveSubroutine(IDNode.getPlace())) == null)
+            SemanticErrors.undeclaredSubroutine(IDNode.getPlace(),IDNode.getLine(), IDNode.getColumn());
+
+        if(!(subroutine instanceof Function))
+            SemanticErrors.procedureCallInAssigment(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+    }
 }

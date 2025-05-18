@@ -1,26 +1,34 @@
-package stages.intermediate.generation;
+package stages.intermediate;
 
 import errors.SemanticErrors;
+import stages.intermediate.final_code.RiscVAssemblyGenerator;
+import stages.intermediate.quads.Quad;
+import stages.intermediate.quads.QuadManager;
 import stages.parser.ASTNode;
-import stages.semantic.ScopeManager;
-import stages.semantic.symbol.*;
+import stages.intermediate.semantic.ScopeManager;
+import stages.intermediate.semantic.symbol.*;
 import visitor.Visitor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class IRGenerator extends Visitor {
+public class IntermediateStage extends Visitor {
     private final QuadManager quadManager;
     private final ScopeManager scopeManager;
+    private final RiscVAssemblyGenerator riscVAssemblyGenerator;
+
+
     private Procedure currentScopeOwner;
     private final List<TemporaryVariable> currentScopeTemporaryVariables;
 
-    public IRGenerator() {
+    public IntermediateStage() {
         this.scopeManager = new ScopeManager();
         this.quadManager = new QuadManager();
+        this.riscVAssemblyGenerator = new RiscVAssemblyGenerator();
+
         this.currentScopeTemporaryVariables = new ArrayList<>();
         this.currentScopeOwner = new Procedure("$$$$$____MAIN_METHOD____$$$$$");
-        this.registerProcedure(this.currentScopeOwner,0,0);
+        this.scopeManager.declareProcedure(this.currentScopeOwner,0,0);
     }
 
 
@@ -33,6 +41,7 @@ public class IRGenerator extends Visitor {
     public List<Quad> getQuads(){
         return this.quadManager.getQuads();
     }
+
 
 
     //Visitors
@@ -458,7 +467,7 @@ public class IRGenerator extends Visitor {
     public void visitProcedure(ASTNode procedureNode) {
         String procedureName = procedureNode.getChildren().get(1).getPlace();
         Procedure procedure = new Procedure(procedureName);
-        this.registerProcedure(procedure
+        this.scopeManager.declareProcedure(procedure
                 ,procedureNode.getChildren().get(1).getLine()
                 ,procedureNode.getChildren().get(1).getColumn());
 
@@ -493,14 +502,15 @@ public class IRGenerator extends Visitor {
     public void visitFunction(ASTNode functionNode) {
         String functionName = functionNode.getChildren().get(1).getPlace();
         Function function = new Function(functionName, DataType.Integer);
-        this.registerFunction(function
+        this.scopeManager.declareFunction(function
                 ,functionNode.getChildren().get(1).getLine()
                 ,functionNode.getChildren().get(1).getColumn());
 
         this.currentScopeOwner = function; //We need this pointer to bind the parameters to the function entity.
         this.scopeManager.openScope();
 
-        Parameter returnParameter = new Parameter(functionName,DataType.Integer, Parameter.Mode.returnValue);
+        Parameter returnParameter =
+                new Parameter(functionName,DataType.Integer, Parameter.Mode.returnValue, this.scopeManager.getDepth());
         //ToDo
         //Return parameter handle will be clear on phase 3
 
@@ -569,7 +579,7 @@ public class IRGenerator extends Visitor {
                     else if (!(parameter instanceof Parameter)) {
                         SemanticErrors.localParameterAsINOUT(parameterName, node.getLine(), node.getColumn());
                     }else{
-                        ((Parameter) parameter).setMode(Parameter.Mode.output);
+                        ((Parameter) parameter).setMode(Parameter.Mode.reference_input);
                     }
                 });
     }
@@ -597,62 +607,11 @@ public class IRGenerator extends Visitor {
     @Override
     public void visitID(ASTNode IDNode) {
         switch (IDNode.getNodeType()){
-            case VARIABLE_IDENTIFIER -> this.variableDeclaration(IDNode);
-            case PARAMETER_IDENTIFIER -> this.parameterDeclaration(IDNode);
-            case VARIABLE_USAGE -> this.resolveVariable(IDNode);
-            case SUBROUTINE_USAGE -> this.resolveSubroutine(IDNode);
-            case FUNCTION_CALL_IN_ASSIGMENT -> this.resolveFunctionInAssigment(IDNode);
+            case VARIABLE_IDENTIFIER -> this.scopeManager.declareVariable(IDNode,this.currentScopeOwner);
+            case PARAMETER_IDENTIFIER -> this.scopeManager.declareParameter(IDNode,this.currentScopeOwner);
+            case VARIABLE_USAGE -> /*this.resolveVariable(IDNode);*/ {}
+            case SUBROUTINE_USAGE -> /*this.resolveSubroutine(IDNode);*/ {}
+            case FUNCTION_CALL_IN_ASSIGMENT -> /*this.resolveFunctionInAssigment(IDNode);*/ {}
         }
-    }
-    private void variableDeclaration(ASTNode IDNode){
-        LocalVariable localVariable = new LocalVariable(IDNode.getPlace(),DataType.Integer);
-        this.registerVariable(localVariable,IDNode.getLine(), IDNode.getColumn());
-        this.currentScopeOwner.getActivationRecord().addLocalVariable(localVariable);
-    }
-    private void registerVariable(LocalVariable localVariable, int line , int column){
-        if(!this.scopeManager.addVariable(localVariable))
-            SemanticErrors.alreadyDeclaredVariable(localVariable.getName(), line, column);
-    }
-
-    private void parameterDeclaration(ASTNode IDNode){
-        Parameter parameter =  new Parameter(IDNode.getPlace(),DataType.Integer);
-        this.registerParameter(parameter,IDNode.getLine(),IDNode.getColumn());
-    }
-    private void registerParameter(Parameter parameter, int line , int column){
-        this.currentScopeOwner.getActivationRecord().addFormalParameter(parameter);
-        if(!this.scopeManager.addVariable(parameter))
-            SemanticErrors.alreadyDeclaredParameter(parameter.getName(), line, column);
-
-    }
-
-    private void resolveVariable(ASTNode IDNode){
-        if(this.scopeManager.resolveVariable(IDNode.getPlace()) == null && this.scopeManager.resolveSubroutine(IDNode.getPlace()) == null) //Function return parameter has the same name as the function
-            {
-            SemanticErrors.undeclaredVariable(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
-        }
-    }
-
-    private void registerFunction(Function function, int line , int column){
-        if(!this.scopeManager.addSubroutine(function))
-            SemanticErrors.alreadyDeclaredFunction(function.getName(), line, column);
-    }
-    private void registerProcedure(Procedure procedure, int line , int column){
-        if(!this.scopeManager.addSubroutine(procedure))
-            SemanticErrors.alreadyDeclaredProcedure(procedure.getName(), line, column);
-    }
-
-    private void resolveSubroutine(ASTNode IDNode){
-        if(this.scopeManager.resolveSubroutine(IDNode.getPlace()) == null){
-            SemanticErrors.undeclaredSubroutine(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
-        }
-    }
-    private void resolveFunctionInAssigment(ASTNode IDNode){
-        Procedure subroutine;
-
-        if((subroutine = this.scopeManager.resolveSubroutine(IDNode.getPlace())) == null)
-            SemanticErrors.undeclaredSubroutine(IDNode.getPlace(),IDNode.getLine(), IDNode.getColumn());
-
-        if(!(subroutine instanceof Function))
-            SemanticErrors.procedureCallInAssigment(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
     }
 }

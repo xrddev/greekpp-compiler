@@ -1,19 +1,21 @@
-package stages.semantic.symbol;
+package stages.intermediate.semantic.symbol;
 
-public class Function extends Procedure {
-    DataType returnType;
+public class Procedure extends Entity {
+    final ActivationRecord activationRecord;
 
-
-    public Function(String name, DataType returnType) {
+    public Procedure(String name) {
         super(name);
-        this.returnType = returnType;
+        this.activationRecord = new ActivationRecord();
+    }
+
+    public ActivationRecord getActivationRecord() {
+        return activationRecord;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("── Function: ").append(name).append(" ──\n");
-        sb.append("  Return Type: ").append(returnType).append("\n");
+        sb.append("── Procedure: ").append(name).append(" ──\n");
         sb.append(indent(activationRecord.toString(), "    "));
         return sb.toString();
     }
@@ -25,5 +27,4 @@ public class Function extends Procedure {
         }
         return result.toString();
     }
-
 }

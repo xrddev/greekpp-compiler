@@ -1,4 +1,4 @@
-package stages.semantic.symbol;
+package stages.intermediate.semantic.symbol;
 
 import java.util.ArrayList;
 import java.util.List;
