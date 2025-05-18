@@ -1,4 +1,4 @@
-package stages.intermediate.generation;
+package stages.intermediate.quads;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

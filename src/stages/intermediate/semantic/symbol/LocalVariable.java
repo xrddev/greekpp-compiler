@@ -1,12 +1,14 @@
-package stages.semantic.symbol;
+package stages.intermediate.semantic.symbol;
 
 public class LocalVariable extends Entity {
     final DataType dataType;
     int offset;
+    int scopeDepth;
 
-    public LocalVariable(String name, DataType dataType){
+    public LocalVariable(String name, DataType dataType, int scopeDepth){
         super(name);
         this.dataType = dataType;
+        this.scopeDepth = scopeDepth;
     }
 
     public DataType getDataType(){
@@ -25,6 +27,11 @@ public class LocalVariable extends Entity {
                 "name='" + name + '\'' +
                 ", dataType=" + dataType +
                 ", offset=" + offset +
+                ", scopeDepth=" + scopeDepth +
                 '}';
+    }
+
+    public int getScopeDepth() {
+        return scopeDepth;
     }
 }

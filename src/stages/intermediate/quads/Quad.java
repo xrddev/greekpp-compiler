@@ -1,4 +1,4 @@
-package stages.intermediate.generation;
+package stages.intermediate.quads;
 
 public class Quad {
     private final String operator;
@@ -23,10 +23,6 @@ public class Quad {
 
     public String getOperand1() {
         return operand1;
-    }
-
-    public String getOperand2() {
-        return operand2;
     }
 
     public String getResult() {
