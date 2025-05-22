@@ -1,7 +1,7 @@
 package errors;
 
 
-import stages.lexer.Token;
+import stages.frontend.lexer.Token;
 
 public final class ParserErrors {
 

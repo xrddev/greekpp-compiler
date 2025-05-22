@@ -1,6 +1,6 @@
 package errors;
 
-import stages.parser.DFAState;
+import stages.frontend.parser.DFAState;
 
 public final class LexerErrors {
     private LexerErrors(){
