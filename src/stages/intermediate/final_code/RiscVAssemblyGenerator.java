@@ -17,7 +17,7 @@ public class RiscVAssemblyGenerator {
     private static final String TEMP_0 = "t0";
     private static final String TEMP_1 = "t1";
     private static final String TEMP_2 = "t2";
-    private static final String TEMP_3 = "t3";
+    private static final String SP_TEMP = "t3";
     private static final String A0 = "a0";
     private static final String A7 = "a7";
 
@@ -167,75 +167,61 @@ public class RiscVAssemblyGenerator {
 
     private void generateAsmForSubroutineBlock(int callQuadIndex, List<Quad> scopeQuads){
         var subroutine= this.loadFromStuckAndResolveSubroutine(scopeQuads.get(callQuadIndex).getResult());
-        int calleNumberOfParameters = subroutine.getActivationRecord().countFormalParameters();
-
+        int calleeNumberOfParameters = subroutine.getActivationRecord().countFormalParameters();
         boolean subroutineIsFunction = subroutine instanceof Function;
-
-        //Create a stack for callee.
-        this.emit("mv " + TEMP_3 + ", sp"); //Save caller stack pointer.
-        this.emit("addi sp, sp, -" + subroutine.getActivationRecord().getRecordLength());
-        this.emit("");
-
-
         int formalParametersOffesetCounter = 12;
 
-        for(int i = callQuadIndex - calleNumberOfParameters - (subroutineIsFunction ? 1 : 0); i < callQuadIndex - (subroutineIsFunction ? 1 : 0); i++){
+        //Create a stack for callee.
+        this.emit("mv " + SP_TEMP + ", sp");
+        this.emit("addi sp, sp, -" + subroutine.getActivationRecord().getRecordLength());
+
+        //Handle dynamic link load for recursive or sibling calling.
+        int callerDepth = this.scopeManager.getDepth();
+        int calleeDepth = subroutine.getScopeDepth();
+        if(callerDepth == calleeDepth)
+            this.emit("lw " + SP_TEMP + ", 4(" + SP_TEMP +")");
+
+
+        //Save dynamic link before parsing parameters so they can use it.
+        this.emit("sw " + SP_TEMP + ", 4(sp)");
+        this.emit("# Allocate callee stack and handle dynamic link ↑↑↑\n");
+
+
+        //Store callee parameters to callee stack.
+        for(int i = callQuadIndex - calleeNumberOfParameters - (subroutineIsFunction ? 1 : 0); i < callQuadIndex - (subroutineIsFunction ? 1 : 0); i++){
             this.generateSubroutineParameters(scopeQuads.get(i), formalParametersOffesetCounter);
             this.emit("# parameter "+ scopeQuads.get(i).getOperand1() + " ↑↑↑\n");
             formalParametersOffesetCounter += 4;
         }
 
+
+        //Store return if is a function
         if(subroutineIsFunction)
             this.generateAsmForFunctionReturnParameter(scopeQuads.get(callQuadIndex - 1));
 
-        this.generateAsmForSubroutineCallQuad(subroutine);
+
+        //save return address to callee
+        this.emit("sw ra, 0(sp)");
+        //Jump to begin block quad. Always will be just before the function starting quad.
+        this.emit("jal L" + (subroutine.getActivationRecord().getStartingQuadAddress() -1));
+
+
+        this.emit("# call ↑↑↑\n");
+
 
         //Free callee stack.
-        this.emit("");
         this.emit("addi sp, sp, " + subroutine.getActivationRecord().getRecordLength());
+        this.emit("# Free callee stack ↑↑↑");
     }
 
     private void generateAsmForFunctionReturnParameter(Quad quad){
         TemporaryVariable returnTempVariable = this.scopeManager.resolveTemporaryVariable(quad.getOperand1());
 
-        this.emit("addi " + TEMP_0 + "," + TEMP_3 +  ", " + returnTempVariable.getOffset());
+        this.emit("addi " + TEMP_0 + "," + SP_TEMP +  ", " + returnTempVariable.getOffset());
         this.emit("sw " + TEMP_0 + ", 8(sp)");
 
         this.emit("# ret par ↑↑↑\n");
     }
-
-
-    private void generateAsmForSubroutineCallQuad(Procedure subroutine){
-        int callerDepth = this.scopeManager.getDepth();
-        int calleeDepth = subroutine.getScopeDepth();
-
-        if(callerDepth < calleeDepth)
-            this.parentCallingChildProcedure(subroutine);
-        else
-            this.childCallingSiblingOrItselfProcedure(subroutine);
-
-    }
-    private void parentCallingChildProcedure(Procedure subroutine){
-
-        this.emit("sw " + TEMP_3 + ", 4(sp)");
-        this.emit("sw ra, 0(sp)");
-        //We subtract one because program block quad saves ra. There is the first asm of the subroutine.
-        this.emit("jal L" + (subroutine.getActivationRecord().getStartingQuadAddress() - 1));
-
-        this.emit("# call ↑↑↑");
-    }
-
-    private void childCallingSiblingOrItselfProcedure(Procedure subroutine){
-        this.emit("lw " + TEMP_3 + ", 4(" + TEMP_3 +")");
-
-
-        this.emit("sw " + TEMP_3 + ", 4(sp)");
-        this.emit("sw ra, 0(sp)");
-        this.emit("jal L" + (subroutine.getActivationRecord().getStartingQuadAddress() -1));
-
-        this.emit("# call ↑↑↑");
-    }
-
 
 
     private void generateSubroutineParameters(Quad quad, int formalParameterOffset){
@@ -248,7 +234,10 @@ public class RiscVAssemblyGenerator {
 
     private void emitParameterByValue(Quad quad, int formalParameterOffset){
         Operand parameter = this.loadFromStuckAndResolveVariable(quad.getOperand1());
-        this.loadOperand(TEMP_0, parameter, this.scopeManager.getDepth());
+        //Parameters are parsed while still being on the caller scope, but the callee stack is already allocated.
+        int calleeScopeDepth = this.scopeManager.getDepth() + 1;
+
+        this.loadOperand(TEMP_0, parameter, calleeScopeDepth);
         this.emit("sw " + TEMP_0 + ", " + formalParameterOffset + "(sp)");
     }
 
@@ -256,10 +245,15 @@ public class RiscVAssemblyGenerator {
 
     private void emitParameterByReference(Quad quad,int formalParameterOffset){
         LocalVariable variable = this.loadFromStuckAndResolveVariableNoIntegerConstantAllowed(quad.getOperand1());
-        int levelDifference = this.scopeManager.getDepth() - variable.getScopeDepth();
+        int calleeScopeDepth = this.scopeManager.getDepth() + 1;
+        //Parameters are parsed while still being on the caller scope, but the callee stack is already allocated.
+        int levelDifference = calleeScopeDepth - variable.getScopeDepth();
+
 
         boolean referenceByReference =
                 variable instanceof Parameter && ((Parameter) variable).getMode() == Parameter.Mode.reference_input;
+
+
 
         if (referenceByReference) {
             //Parameter is by reference at caller scope.
@@ -280,6 +274,14 @@ public class RiscVAssemblyGenerator {
         }
         this.emit("sw " + TEMP_0 + ", " + formalParameterOffset + "(sp)");
     }
+
+
+
+
+
+
+
+
 
 
 
@@ -358,7 +360,7 @@ public class RiscVAssemblyGenerator {
                 case "retv" -> this.generateAsmForReturnOnCallee(scopeQuads.get(i));
                 case "end_block" -> this.generateAsmForEndBlock(scopeQuads.get(i));
                 case "out" -> this.generateAsmForPrint(scopeQuads.get(i));
-                case "par" -> {} //Ignore. Call quad will handle them
+                case "par" -> this.emit("# Ignored. Call quad will handle it.");
                 case "call" -> this.generateAsmForSubroutineBlock(i ,scopeQuads);
                 case "jump" -> this.emitJump(scopeQuads.get(i));
                 case "=", "<>", "<", ">", "<=", ">=" -> this.emitConditionalJump(scopeQuads.get(i));

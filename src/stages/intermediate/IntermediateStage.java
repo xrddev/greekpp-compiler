@@ -587,6 +587,9 @@ public class IntermediateStage extends Visitor {
     private void legalNumberOfParametersCheck(ASTNode IDNode, ASTNode actualParameterListNode){
         Procedure subroutine = this.scopeManager.resolveSubroutine(IDNode.getPlace());
 
+        if(subroutine == null)
+            SemanticErrors.undeclaredSubroutine(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+
         int subroutineParametersNumberOnCall = Math.toIntExact(
                 actualParameterListNode.getChildren()
                         .stream()
