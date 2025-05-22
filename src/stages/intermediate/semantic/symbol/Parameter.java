@@ -6,6 +6,7 @@ public class Parameter extends LocalVariable {
     }
     Mode mode;
 
+
     public Parameter(String name, DataType dataType, int scopeDepth) {
         super(name, dataType, scopeDepth);
         this.mode = Mode.input_by_default;
@@ -34,4 +35,5 @@ public class Parameter extends LocalVariable {
     public Mode getMode(){
         return this.mode;
     }
+
 }

@@ -34,4 +34,10 @@ public class LocalVariable extends Entity {
     public int getScopeDepth() {
         return scopeDepth;
     }
+
+
+    public ActivationRecord getActivationRecordPointer(){
+        return null;
+    }
+
 }

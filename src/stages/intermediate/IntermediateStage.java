@@ -15,22 +15,16 @@ import java.util.List;
 public class IntermediateStage extends Visitor {
     private final QuadManager quadManager;
     private final ScopeManager scopeManager;
-    private final RiscVAssemblyGenerator riscVAssemblyGenerator;
+    private final RiscVAssemblyGenerator asmManager;
 
-
-    private Procedure currentScopeOwner;
-    private final List<TemporaryVariable> currentScopeTemporaryVariables;
+    private Procedure currentBlockOwner;
 
     public IntermediateStage() {
-        this.scopeManager = new ScopeManager();
         this.quadManager = new QuadManager();
-        this.riscVAssemblyGenerator = new RiscVAssemblyGenerator();
-
-        this.currentScopeTemporaryVariables = new ArrayList<>();
-        this.currentScopeOwner = new Procedure("$$$$$____MAIN_METHOD____$$$$$");
-        this.scopeManager.declareProcedure(this.currentScopeOwner,0,0);
+        this.asmManager = new RiscVAssemblyGenerator(this.scopeManager = new ScopeManager());
+        this.currentBlockOwner = new Procedure("$$$_Main_$$$", this.scopeManager.getDepth());
+        this.scopeManager.declareProcedure(this.currentBlockOwner,0,0);
     }
-
 
     public ScopeManager getScopeManager() {
         return scopeManager;
@@ -53,18 +47,24 @@ public class IntermediateStage extends Visitor {
         ASTNode sequenceNode = programBlockNode.getChildren().get(3);
         ASTNode programEndNode = programBlockNode.getChildren().get(4);
 
-        Procedure mainMethod = this.currentScopeOwner;
+        Procedure mainMethod = this.currentBlockOwner;
         this.visit(declarationsNode);
         this.visit(subprogramsNode);
 
-        this.quadManager.generateQuad("begin_block", programBlockNode.getPlace(), null, null);
+        this.asmManager.setAsmFileName(programBlockNode.getPlace());
+        this.quadManager.generateQuad("begin_block", "$$$_Main_$$$", null, null);
         mainMethod.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
         this.visit(sequenceNode);
         this.visit(programEndNode);
-        this.quadManager.generateQuad("end_block", programBlockNode.getPlace(), null, null);
-        this.currentScopeTemporaryVariables.forEach(temp -> mainMethod.getActivationRecord().addTemporaryVariable(temp));
-        this.currentScopeTemporaryVariables.clear();
+        this.quadManager.generateQuad("end_block", "$$$_Main_$$$", null, null);
+
+
+        mainMethod.getActivationRecord().addAllTemporaryVariables(this.scopeManager.getCurrentScopeTemporaryVariables().values());
+        this.asmManager.generateAsmBatchForCurrentScope(this.quadManager.getQuads());
+
+
         this.scopeManager.closeScope(); //Scope Manager constructor automatically opens the base scope.
+        this.asmManager.writeToFile();
     }
 
 
@@ -107,7 +107,7 @@ public class IntermediateStage extends Visitor {
             this.visit(T2);
 
             String temp = this.quadManager.newTemp();
-            this.currentScopeTemporaryVariables.add(new TemporaryVariable(temp,DataType.Integer));
+            this.scopeManager.addTemporaryVariable(new TemporaryVariable(temp,DataType.Integer, this.scopeManager.getDepth()));
             this.quadManager.generateQuad(operator.getPlace(), T1.getPlace(), T2.getPlace(), temp);
             T1.setPlace(temp);
         }
@@ -116,7 +116,7 @@ public class IntermediateStage extends Visitor {
     private void negativeNumberMapping(ASTNode T1 , ASTNode sign){
         if(sign.getPlace().equals("-")){
             String temp = this.quadManager.newTemp();
-            this.currentScopeTemporaryVariables.add(new TemporaryVariable(temp,DataType.Integer));
+            this.scopeManager.getCurrentScopeTemporaryVariables().put(temp,new TemporaryVariable(temp,DataType.Integer, this.scopeManager.getDepth()));
             this.quadManager.generateQuad("-", "0", T1.getPlace(), temp);
             T1.setPlace(temp);
         }
@@ -148,7 +148,7 @@ public class IntermediateStage extends Visitor {
             this.visit(F2);
 
             String temp = this.quadManager.newTemp();
-            this.currentScopeTemporaryVariables.add(new TemporaryVariable(temp,DataType.Integer));
+            this.scopeManager.addTemporaryVariable(new TemporaryVariable(temp,DataType.Integer, this.scopeManager.getDepth()));
             this.quadManager.generateQuad(operator.getPlace(), F1.getPlace(), F2.getPlace(), temp);
             F1.setPlace(temp);
         }
@@ -181,7 +181,7 @@ public class IntermediateStage extends Visitor {
         this.visit(idTailNode);
 
         String temp = this.quadManager.newTemp();
-        this.currentScopeTemporaryVariables.add(new TemporaryVariable(temp,DataType.Integer));
+        this.scopeManager.addTemporaryVariable(new TemporaryVariable(temp,DataType.Integer, this.scopeManager.getDepth()));
         this.quadManager.generateDelayedQuad("par", temp, "ret", null);
         this.quadManager.generateDelayedQuad("call", null, null, IDNode.getPlace());
 
@@ -355,11 +355,9 @@ public class IntermediateStage extends Visitor {
         ASTNode stepNode = forStatementNode.getChildren().get(7);
         ASTNode sequenceNode = forStatementNode.getChildren().get(9);
 
-        this.scopeManager.openScope();
 
-        this.visit(ID);
         this.visit(expression1);
-        this.quadManager.generateQuad(":=", ID.getPlace(), null, expression1.getPlace());
+        this.quadManager.generateQuad(":=", expression1.getPlace(), null, ID.getPlace());
 
         this.visit(expression2);
         this.visit(stepNode);
@@ -401,9 +399,9 @@ public class IntermediateStage extends Visitor {
         this.quadManager.backPatch(checkTrueList, this.quadManager.nextQuad());
         this.visit(sequenceNode);
         String temp = this.quadManager.newTemp();
-        this.currentScopeTemporaryVariables.add(new TemporaryVariable(temp,DataType.Integer));
+        this.scopeManager.addTemporaryVariable(new TemporaryVariable(temp,DataType.Integer, this.scopeManager.getDepth()));
         this.quadManager.generateQuad("+", ID.getPlace(), stepNode.getPlace(), temp);
-        this.quadManager.generateQuad(":=", ID.getPlace(), null, temp);
+        this.quadManager.generateQuad(":=", temp , null, ID.getPlace());
 
         this.quadManager.generateQuad(">=", stepNode.getPlace(), "0", positiveStepCheckLabel);
         this.quadManager.generateQuad("jump", null, null, negativeCheckStepLabel);
@@ -412,7 +410,6 @@ public class IntermediateStage extends Visitor {
         //exit
         this.quadManager.backPatch(checkFalseList, this.quadManager.nextQuad());
 
-        this.scopeManager.closeScope();
     }
 
 
@@ -466,12 +463,12 @@ public class IntermediateStage extends Visitor {
     @Override
     public void visitProcedure(ASTNode procedureNode) {
         String procedureName = procedureNode.getChildren().get(1).getPlace();
-        Procedure procedure = new Procedure(procedureName);
+        Procedure procedure = new Procedure(procedureName, this.scopeManager.getDepth() + 1);
         this.scopeManager.declareProcedure(procedure
                 ,procedureNode.getChildren().get(1).getLine()
                 ,procedureNode.getChildren().get(1).getColumn());
 
-        this.currentScopeOwner = procedure; //We need this pointer to bind the parameters to the procedure entity.
+        this.currentBlockOwner = procedure; //We need this pointer to bind the parameters to the procedure entity.
         this.scopeManager.openScope();
         ASTNode formalParametersListNode =  procedureNode.getChildren().get(3);
         this.visit(formalParametersListNode);
@@ -487,13 +484,15 @@ public class IntermediateStage extends Visitor {
         this.visit(functionOutput);
         this.visit(declarations);
         this.visit(subprograms);
+        this.currentBlockOwner = procedure;
         this.quadManager.generateQuad("begin_block", procedureName, null, null);
         procedure.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
         this.visit(sequence);
 
         this.quadManager.generateQuad("end_block", procedureName, null, null);
-        this.currentScopeTemporaryVariables.forEach(temp -> procedure.getActivationRecord().addTemporaryVariable(temp));
-        this.currentScopeTemporaryVariables.clear();
+        procedure.getActivationRecord().addAllTemporaryVariables(this.scopeManager.getCurrentScopeTemporaryVariables().values());
+
+        this.asmManager.generateAsmBatchForCurrentScope(this.quadManager.getQuads());
         this.scopeManager.closeScope();
     }
 
@@ -501,21 +500,19 @@ public class IntermediateStage extends Visitor {
     @Override
     public void visitFunction(ASTNode functionNode) {
         String functionName = functionNode.getChildren().get(1).getPlace();
-        Function function = new Function(functionName, DataType.Integer);
+        Function function = new Function(functionName, DataType.Integer, this.scopeManager.getDepth() + 1);
         this.scopeManager.declareFunction(function
                 ,functionNode.getChildren().get(1).getLine()
                 ,functionNode.getChildren().get(1).getColumn());
 
-        this.currentScopeOwner = function; //We need this pointer to bind the parameters to the function entity.
+        this.currentBlockOwner = function; //We need this pointer to bind the parameters to the function entity.
         this.scopeManager.openScope();
 
-        Parameter returnParameter =
-                new Parameter(functionName,DataType.Integer, Parameter.Mode.returnValue, this.scopeManager.getDepth());
-        //ToDo
-        //Return parameter handle will be clear on phase 3
 
         ASTNode formalParametersListNode =  functionNode.getChildren().get(3);
         this.visit(formalParametersListNode);
+
+        this.scopeManager.declareReturnVariable(functionName, currentBlockOwner);
 
         ASTNode functionBlock = functionNode.getChildren().get(5);
         ASTNode functionInput = functionBlock.getChildren().get(1);
@@ -528,14 +525,16 @@ public class IntermediateStage extends Visitor {
         this.visit(functionOutput);
         this.visit(declarations);
         this.visit(subprograms);
+        this.currentBlockOwner = function;
         this.quadManager.generateQuad("begin_block", functionName, null, null);
         function.getActivationRecord().setStartingQuadAddress(this.quadManager.nextQuad());
         this.visit(sequence);
 
-        this.getQuadManager().generateQuad("retv",null, null, returnParameter.getName());
+        this.getQuadManager().generateQuad("retv",null, null, functionName);
         this.quadManager.generateQuad("end_block", functionName, null, null);
-        this.currentScopeTemporaryVariables.forEach(temp -> function.getActivationRecord().addTemporaryVariable(temp));
-        this.currentScopeTemporaryVariables.clear();
+        function.getActivationRecord().addAllTemporaryVariables(this.scopeManager.getCurrentScopeTemporaryVariables().values());
+
+        this.asmManager.generateAsmBatchForCurrentScope(this.quadManager.getQuads());
         this.scopeManager.closeScope();
     }
 
@@ -607,11 +606,10 @@ public class IntermediateStage extends Visitor {
     @Override
     public void visitID(ASTNode IDNode) {
         switch (IDNode.getNodeType()){
-            case VARIABLE_IDENTIFIER -> this.scopeManager.declareVariable(IDNode,this.currentScopeOwner);
-            case PARAMETER_IDENTIFIER -> this.scopeManager.declareParameter(IDNode,this.currentScopeOwner);
-            case VARIABLE_USAGE -> /*this.resolveVariable(IDNode);*/ {}
-            case SUBROUTINE_USAGE -> /*this.resolveSubroutine(IDNode);*/ {}
-            case FUNCTION_CALL_IN_ASSIGMENT -> /*this.resolveFunctionInAssigment(IDNode);*/ {}
+            case VARIABLE_IDENTIFIER -> this.scopeManager.declareVariable(IDNode,this.currentBlockOwner);
+            case PARAMETER_IDENTIFIER -> this.scopeManager.declareParameter(IDNode,this.currentBlockOwner);
+            case VARIABLE_USAGE -> {}
+            case FUNCTION_CALL_IN_ASSIGMENT -> this.scopeManager.resolveFunctionInAssigment(IDNode);
         }
     }
 }
