@@ -7,9 +7,7 @@ import stages.parser.ASTNode;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ScopeManager {
     private static class Scope {
@@ -65,6 +63,7 @@ public class ScopeManager {
     }
 
 
+    private final Map<String, TemporaryVariable> currentScopeTemporaryVariables;
     private final StringBuilder scopesLog;
     private Scope currentScope;
     int depth;
@@ -72,6 +71,7 @@ public class ScopeManager {
     public ScopeManager() {
         this.currentScope = new Scope(null);
         this.scopesLog = new StringBuilder();
+        this.currentScopeTemporaryVariables = new HashMap<>();
         this.depth = 0;
     }
 
@@ -87,7 +87,9 @@ public class ScopeManager {
         this.logScope();
         this.currentScope = this.currentScope.parent;
         this.depth--;
+        this.currentScopeTemporaryVariables.clear();
     }
+
     public boolean addVariable(LocalVariable localVariable) {
         if(this.currentScope.symbolTable.variables.containsKey(localVariable.getName())){
             return false;
@@ -117,6 +119,7 @@ public class ScopeManager {
             }
             scope = scope.parent;
         }
+
         return null;
     }
 
@@ -130,6 +133,28 @@ public class ScopeManager {
         }
         return null;
     }
+
+    public TemporaryVariable resolveTemporaryVariable(String name){
+        return this.currentScopeTemporaryVariables.get(name);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public void printScopesLog(String programName) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(programName + ".sym"))) {
@@ -145,6 +170,13 @@ public class ScopeManager {
         LocalVariable localVariable = new LocalVariable(IDNode.getPlace(), DataType.Integer, this.getDepth());
         if(!this.addVariable(localVariable))
             SemanticErrors.alreadyDeclaredVariable(localVariable.getName(), IDNode.getLine(), IDNode.getColumn());
+        currentScopeOwner.getActivationRecord().addLocalVariable(localVariable);
+    }
+
+    public void declareReturnVariable(String functionName, Procedure currentScopeOwner){
+        LocalVariable localVariable = new LocalVariable(functionName, DataType.Integer, this.getDepth());
+        if(!this.addVariable(localVariable))
+            SemanticErrors.alreadyDeclaredVariable(localVariable.getName(), 0, 0);
         currentScopeOwner.getActivationRecord().addLocalVariable(localVariable);
     }
 
@@ -171,16 +203,15 @@ public class ScopeManager {
 
 
 
-    public void resolveVariable(ASTNode IDNode){
-        if(this.resolveVariable(IDNode.getPlace()) == null && this.resolveSubroutine(IDNode.getPlace()) == null) //Function return parameter has the same name as the function
-            SemanticErrors.undeclaredVariable(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+    public void addTemporaryVariable(TemporaryVariable temporaryVariable){
+        this.currentScopeTemporaryVariables.put(temporaryVariable.getName(), temporaryVariable);
     }
 
 
-    public void resolveSubroutine(ASTNode IDNode){
-        if(this.resolveSubroutine(IDNode.getPlace()) == null)
-            SemanticErrors.undeclaredSubroutine(IDNode.getPlace(), IDNode.getLine(), IDNode.getColumn());
+    public Map<String, TemporaryVariable> getCurrentScopeTemporaryVariables(){
+        return this.currentScopeTemporaryVariables;
     }
+
 
     public void resolveFunctionInAssigment(ASTNode IDNode){
         Procedure subroutine;

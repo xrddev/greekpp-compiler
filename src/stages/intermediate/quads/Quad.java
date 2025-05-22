@@ -22,25 +22,28 @@ public class Quad {
     }
 
     public String getOperand1() {
-        return operand1;
+        return this.operand1;
     }
 
     public String getResult() {
         return result;
     }
 
-    public boolean operatorIsAddOperator(){
-        if(this.operator == null) return false;
-        return switch (this.operator){
-            case "+", "-", "*", "/" -> true;
-            default -> false;
-        };
+
+    public String getOperand2() {
+        return this.operand2;
     }
 
-    public boolean operatorIsEqualSign(){
-        if (this.operator == null) return false;
-        return this.operator.equals(":=");
+
+    public boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
+
 
     @Override
     public String toString() {

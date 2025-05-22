@@ -1,8 +1,8 @@
 package stages.intermediate.semantic.symbol;
 
 public class TemporaryVariable  extends LocalVariable {
-    public TemporaryVariable(String name, DataType dataType) {
-        super(name, dataType, 0);
+    public TemporaryVariable(String name, DataType dataType, int scopeDepth) {
+        super(name, dataType, scopeDepth);
     }
     @Override
     public String toString() {

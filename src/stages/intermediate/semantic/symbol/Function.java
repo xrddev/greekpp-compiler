@@ -4,8 +4,8 @@ public class Function extends Procedure {
     DataType returnType;
 
 
-    public Function(String name, DataType returnType) {
-        super(name);
+    public Function(String name, DataType returnType, int scopeDepth) {
+        super(name, scopeDepth);
         this.returnType = returnType;
     }
 
@@ -13,6 +13,7 @@ public class Function extends Procedure {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("── Function: ").append(name).append(" ──\n");
+        sb.append("   Scope Depth: ").append(scopeDepth).append("\n");
         sb.append("  Return Type: ").append(returnType).append("\n");
         sb.append(indent(activationRecord.toString(), "    "));
         return sb.toString();

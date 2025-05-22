@@ -1,40 +1,42 @@
 package stages.intermediate.semantic.symbol;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ActivationRecord {
-    private final List<TemporaryVariable> temporaryLocalVariables;
-    private final List<LocalVariable> localLocalVariables;
-    private final List<Parameter> formalParameters;
+    private final Map<String,TemporaryVariable> temporaryLocalVariables;
+    private final Map<String,LocalVariable> localLocalVariables;
+    private final Map<String,Parameter> formalParameters;
     private int startingQuadAddress;
-    private Parameter returnValue;
     private int recordLength;
 
 
     public ActivationRecord() {
-        this.temporaryLocalVariables = new ArrayList<>();
-        this.formalParameters = new ArrayList<>();
-        this.localLocalVariables = new ArrayList<>();
+        this.temporaryLocalVariables = new HashMap<>();
+        this.formalParameters = new HashMap<>();
+        this.localLocalVariables = new HashMap<>();
         this.recordLength = 12;
     }
 
-    public void addTemporaryVariable(TemporaryVariable temporaryVariable) {
-        this.temporaryLocalVariables.add(temporaryVariable);
+    public void addAllTemporaryVariables(Collection<TemporaryVariable> temporaryVariables) {
+      temporaryVariables.forEach(this::addTemporaryVariable);
+    }
+
+    private void addTemporaryVariable(TemporaryVariable temporaryVariable) {
+        this.temporaryLocalVariables.put(temporaryVariable.getName(), temporaryVariable);
         temporaryVariable.setOffset(this.recordLength);
         this.recordLength += temporaryVariable.getDataType().getByteSize();
 
     }
 
     public void addFormalParameter(Parameter parameter) {
-        this.formalParameters.add(parameter);
+        this.formalParameters.put(parameter.getName(), parameter);
         parameter.setOffset(this.recordLength);
         this.recordLength += parameter.getDataType().getByteSize();
 
     }
 
     public void addLocalVariable(LocalVariable localVariable) {
-        this.localLocalVariables.add(localVariable);
+        this.localLocalVariables.put(localVariable.getName(), localVariable);
         localVariable.setOffset(this.recordLength);
         this.recordLength += localVariable.getDataType().getByteSize();
     }
@@ -57,10 +59,14 @@ public class ActivationRecord {
         if (temporaryLocalVariables.isEmpty()) {
             sb.append("none\n");
         } else {
-            for (int i = 0; i < temporaryLocalVariables.size(); i++) {
-                LocalVariable t = temporaryLocalVariables.get(i);
-                sb.append(t.getName()).append(":").append(t.getDataType()).append("@").append(t.getOffset());
-                if (i < temporaryLocalVariables.size() - 1) sb.append(", ");
+            int i = 0;
+            for (TemporaryVariable t : temporaryLocalVariables.values()) {
+                sb.append(t.getName())
+                        .append(":")
+                        .append(t.getDataType())
+                        .append("@")
+                        .append(t.getOffset());
+                if (++i < temporaryLocalVariables.size()) sb.append(", ");
             }
             sb.append("\n");
         }
@@ -69,38 +75,46 @@ public class ActivationRecord {
         if (localLocalVariables.isEmpty()) {
             sb.append("none\n");
         } else {
-            for (int i = 0; i < localLocalVariables.size(); i++) {
-                LocalVariable v = localLocalVariables.get(i);
-                sb.append(v.getName()).append(":").append(v.getDataType()).append("@").append(v.getOffset());
-                if (i < localLocalVariables.size() - 1) sb.append(", ");
+            int i = 0;
+            for (LocalVariable v : localLocalVariables.values()) {
+                sb.append(v.getName())
+                        .append(":")
+                        .append(v.getDataType())
+                        .append("@")
+                        .append(v.getOffset());
+                if (++i < localLocalVariables.size()) sb.append(", ");
             }
             sb.append("\n");
         }
 
-        sb.append("  FormalParameters:    ");
+        sb.append("  Formal Parameters:   ");
         if (formalParameters.isEmpty()) {
             sb.append("none\n");
         } else {
-            for (int i = 0; i < formalParameters.size(); i++) {
-                Parameter p = formalParameters.get(i);
-                sb.append(p.getName()).append(":").append(p.getDataType()).append("@").append(p.getOffset());
-                if (i < formalParameters.size() - 1) sb.append(", ");
+            int i = 0;
+            for (Parameter p : formalParameters.values()) {
+                sb.append(p.getName())
+                        .append(":")
+                        .append(p.getDataType())
+                        .append("@")
+                        .append(p.getOffset());
+                if (++i < formalParameters.size()) sb.append(", ");
             }
             sb.append("\n");
         }
 
         sb.append("  StartingQuadAddress: ").append(startingQuadAddress).append("\n");
-
-        sb.append("  Return Value:        ");
-        if (returnValue != null) {
-            sb.append(returnValue.getName()).append(":").append(returnValue.getDataType()).append("@").append(returnValue.getOffset()).append("\n");
-        } else {
-            sb.append("none\n");
-        }
-
         sb.append("  Record Size:         ").append(recordLength).append(" bytes");
 
         return sb.toString();
     }
 
+
+    public int getRecordLength(){
+        return this.recordLength;
+    }
+
+    public int getStartingQuadAddress() {
+        return startingQuadAddress;
+    }
 }
