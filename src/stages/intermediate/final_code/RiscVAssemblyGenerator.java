@@ -117,17 +117,16 @@ public class RiscVAssemblyGenerator {
     }
 
 
-    private void generateAsmForReturnOnCalle(Quad quad){
+    private void generateAsmForReturnOnCallee(Quad quad){
         Operand result = this.loadFromStuckAndResolveVariable(quad.getResult());
-        this.emitReturnOnCalle(result);
+        this.emitReturnOnCallee(result);
     }
-    private void emitReturnOnCalle(Operand operand){
+    private void emitReturnOnCallee(Operand operand){
         LocalVariable result = ((VariableOperand) operand).value();
         this.emit("lw " + TEMP_0 + ", 8(sp)");
         this.emit("lw " + TEMP_1 + ", " + result.getOffset() + "(sp)");
         this.emit("sw " + TEMP_1 + ", 0(" + TEMP_0 + ")");
     }
-
 
     private void generateAsmForPrint(Quad quad) {
         Operand result = this.loadFromStuckAndResolveVariable(quad.getResult());
@@ -168,7 +167,6 @@ public class RiscVAssemblyGenerator {
 
     private void generateAsmForSubroutineBlock(int callQuadIndex, List<Quad> scopeQuads){
         var subroutine= this.loadFromStuckAndResolveSubroutine(scopeQuads.get(callQuadIndex).getResult());
-        int calleActivationRecordLength = subroutine.getActivationRecord().getRecordLength();
         int calleNumberOfParameters = subroutine.getActivationRecord().countFormalParameters();
 
         boolean subroutineIsFunction = subroutine instanceof Function;
@@ -196,7 +194,6 @@ public class RiscVAssemblyGenerator {
         this.emit("");
         this.emit("addi sp, sp, " + subroutine.getActivationRecord().getRecordLength());
     }
-
 
     private void generateAsmForFunctionReturnParameter(Quad quad){
         TemporaryVariable returnTempVariable = this.scopeManager.resolveTemporaryVariable(quad.getOperand1());
@@ -358,7 +355,7 @@ public class RiscVAssemblyGenerator {
                 case ":=" -> this.generateAsmForAssigment(scopeQuads.get(i));
                 case "begin_block" -> this.generateAsmForBeginBlock(scopeQuads.get(i));
                 case "+", "-", "*", "/" -> this.generateAsmForArithmeticOperation(scopeQuads.get(i));
-                case "retv" -> this.generateAsmForReturnOnCalle(scopeQuads.get(i));
+                case "retv" -> this.generateAsmForReturnOnCallee(scopeQuads.get(i));
                 case "end_block" -> this.generateAsmForEndBlock(scopeQuads.get(i));
                 case "out" -> this.generateAsmForPrint(scopeQuads.get(i));
                 case "par" -> {} //Ignore. Call quad will handle them
