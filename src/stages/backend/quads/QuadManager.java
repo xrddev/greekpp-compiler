@@ -61,7 +61,7 @@ public class QuadManager {
                 writer.write(String.format(format, i) + this.quads.get(i));
                 writer.newLine();
             }
-            System.out.println("Quads have been successfully written to the file " + programName + ".int");
+            System.out.println("✅ Quads have been successfully written to the file " + programName + ".int");
         } catch (IOException e) {
             System.err.println("Error while writing to the file: " + e.getMessage());
         }

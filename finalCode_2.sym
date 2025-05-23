@@ -1,0 +1,84 @@
+Closing scope    || Depth: 1
+Variables:
+  Parameter{name='result', dataType=Integer, offset=20, mode=reference_input, scopeDepth=1}
+  Parameter{name='n2', dataType=Integer, offset=16, mode=reference_input, scopeDepth=1}
+  Parameter{name='n1', dataType=Integer, offset=12, mode=reference_input, scopeDepth=1}
+Subroutines:
+  (none)
+---
+
+Closing scope    || Depth: 2
+Variables:
+  Parameter{name='s3', dataType=Integer, offset=20, mode=reference_input, scopeDepth=2}
+  Parameter{name='s2', dataType=Integer, offset=16, mode=reference_input, scopeDepth=2}
+  Parameter{name='s1', dataType=Integer, offset=12, mode=reference_input, scopeDepth=2}
+Subroutines:
+  (none)
+---
+
+Closing scope    || Depth: 2
+Variables:
+  LocalVariable{name='temp', dataType=Integer, offset=24, scopeDepth=2}
+  Parameter{name='result', dataType=Integer, offset=20, mode=reference_input, scopeDepth=2}
+  Parameter{name='n2', dataType=Integer, offset=16, mode=reference_input, scopeDepth=2}
+  Parameter{name='n1', dataType=Integer, offset=12, mode=reference_input, scopeDepth=2}
+Subroutines:
+  (none)
+---
+
+Closing scope    || Depth: 1
+Variables:
+  Parameter{name='m3', dataType=Integer, offset=20, mode=reference_input, scopeDepth=1}
+  Parameter{name='m2', dataType=Integer, offset=16, mode=reference_input, scopeDepth=1}
+  Parameter{name='m1', dataType=Integer, offset=12, mode=reference_input, scopeDepth=1}
+Subroutines:
+  ── Procedure: add ──
+     Scope Depth: 2
+      ActivationRecord:
+        Temporary Variables: $T_3:Integer@28
+        Local Variables:     temp:Integer@24
+        Formal Parameters:   result:Integer@20, n1:Integer@12, n2:Integer@16
+        StartingQuadAddress: 23
+        Record Size:         32 bytes
+  ── Procedure: sub_2 ──
+     Scope Depth: 2
+      ActivationRecord:
+        Temporary Variables: $T_2:Integer@24
+        Local Variables:     none
+        Formal Parameters:   s3:Integer@20, s1:Integer@12, s2:Integer@16
+        StartingQuadAddress: 11
+        Record Size:         28 bytes
+---
+
+Closing scope    || Depth: 0
+Variables:
+  LocalVariable{name='c', dataType=Integer, offset=20, scopeDepth=0}
+  LocalVariable{name='b', dataType=Integer, offset=16, scopeDepth=0}
+  LocalVariable{name='a', dataType=Integer, offset=12, scopeDepth=0}
+Subroutines:
+  ── Procedure: sub ──
+     Scope Depth: 1
+      ActivationRecord:
+        Temporary Variables: $T_1:Integer@24
+        Local Variables:     none
+        Formal Parameters:   result:Integer@20, n1:Integer@12, n2:Integer@16
+        StartingQuadAddress: 1
+        Record Size:         28 bytes
+  ── Procedure: $$$_Main_$$$ ──
+     Scope Depth: 0
+      ActivationRecord:
+        Temporary Variables: none
+        Local Variables:     a:Integer@12, b:Integer@16, c:Integer@20
+        Formal Parameters:   none
+        StartingQuadAddress: 57
+        Record Size:         24 bytes
+  ── Procedure: add_and_mul ──
+     Scope Depth: 1
+      ActivationRecord:
+        Temporary Variables: $T_4:Integer@24, $T_5:Integer@28
+        Local Variables:     none
+        Formal Parameters:   m1:Integer@12, m2:Integer@16, m3:Integer@20
+        StartingQuadAddress: 39
+        Record Size:         32 bytes
+---
+

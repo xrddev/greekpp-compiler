@@ -1,0 +1,83 @@
+ 0 : begin_block, sub, _, _
+ 1 : out, _, _, 300
+ 2 : out, _, _, n1
+ 3 : out, _, _, n2
+ 4 : out, _, _, result
+ 5 : -, n1, n2, $T_1
+ 6 : :=, $T_1, _, result
+ 7 : :=, 11, _, n1
+ 8 : :=, 12, _, n2
+ 9 : end_block, sub, _, _
+10 : begin_block, sub_2, _, _
+11 : out, _, _, 300
+12 : out, _, _, s1
+13 : out, _, _, s2
+14 : out, _, _, s3
+15 : -, s1, s2, $T_2
+16 : :=, $T_2, _, s3
+17 : out, _, _, s1
+18 : out, _, _, s2
+19 : out, _, _, s3
+20 : out, _, _, 300
+21 : end_block, sub_2, _, _
+22 : begin_block, add, _, _
+23 : out, _, _, 200
+24 : out, _, _, n1
+25 : out, _, _, n2
+26 : out, _, _, result
+27 : -, 0, n2, $T_3
+28 : :=, $T_3, _, n2
+29 : par, n1, ref, _
+30 : par, n2, ref, _
+31 : par, result, ref, _
+32 : call, _, _, sub_2
+33 : out, _, _, n1
+34 : out, _, _, n2
+35 : out, _, _, result
+36 : out, _, _, 200
+37 : end_block, add, _, _
+38 : begin_block, add_and_mul, _, _
+39 : out, _, _, 100
+40 : out, _, _, m1
+41 : out, _, _, m2
+42 : out, _, _, m3
+43 : par, m1, ref, _
+44 : par, m2, ref, _
+45 : par, m1, ref, _
+46 : call, _, _, add
+47 : out, _, _, m1
+48 : out, _, _, m2
+49 : out, _, _, m3
+50 : *, m1, 2, $T_4
+51 : :=, $T_4, _, m2
+52 : *, m1, m2, $T_5
+53 : :=, $T_5, _, m3
+54 : out, _, _, 100
+55 : end_block, add_and_mul, _, _
+56 : begin_block, $$$_Main_$$$, _, _
+57 : :=, 3, _, a
+58 : :=, 7, _, b
+59 : :=, 98, _, c
+60 : out, _, _, a
+61 : out, _, _, b
+62 : out, _, _, c
+63 : par, a, ref, _
+64 : par, b, ref, _
+65 : par, c, ref, _
+66 : call, _, _, sub
+67 : out, _, _, a
+68 : out, _, _, b
+69 : out, _, _, c
+70 : out, _, _, 999
+71 : out, _, _, 999
+72 : out, _, _, 999
+73 : par, a, ref, _
+74 : par, b, ref, _
+75 : par, c, ref, _
+76 : call, _, _, add_and_mul
+77 : out, _, _, 999
+78 : out, _, _, a
+79 : out, _, _, b
+80 : out, _, _, c
+81 : halt, _, _, _
+82 : end_block, $$$_Main_$$$, _, _
