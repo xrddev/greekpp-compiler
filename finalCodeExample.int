@@ -1,0 +1,28 @@
+ 0 : begin_block, func, _, _
+ 1 : :=, 4, _, d
+ 2 : :=, B, _, A
+ 3 : :=, a, _, b
+ 4 : +, c, d, $T_1
+ 5 : :=, $T_1, _, func
+ 6 : retv, _, _, func
+ 7 : end_block, func, _, _
+ 8 : begin_block, proc, _, _
+ 9 : :=, 3, _, c
+10 : out, _, _, A
+11 : out, _, _, B
+12 : par, $T_2, ret, _
+13 : call, _, _, func
+14 : :=, $T_2, _, B
+15 : out, _, _, A
+16 : out, _, _, B
+17 : end_block, proc, _, _
+18 : begin_block, $$$_Main_$$$, _, _
+19 : :=, 1, _, A
+20 : :=, 2, _, B
+21 : par, A, cv, _
+22 : par, B, ref, _
+23 : call, _, _, proc
+24 : out, _, _, A
+25 : out, _, _, B
+26 : halt, _, _, _
+27 : end_block, $$$_Main_$$$, _, _

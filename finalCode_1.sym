@@ -1,0 +1,88 @@
+Closing scope    || Depth: 2
+Variables:
+  LocalVariable{name='absDiff', dataType=Integer, offset=20, scopeDepth=2}
+  Parameter{name='q', dataType=Integer, offset=16, mode=input, scopeDepth=2}
+  Parameter{name='p', dataType=Integer, offset=12, mode=input, scopeDepth=2}
+Subroutines:
+  (none)
+---
+
+Closing scope    || Depth: 1
+Variables:
+  LocalVariable{name='x2', dataType=Integer, offset=28, scopeDepth=1}
+  LocalVariable{name='x1', dataType=Integer, offset=24, scopeDepth=1}
+  LocalVariable{name='max', dataType=Integer, offset=20, scopeDepth=1}
+  Parameter{name='y', dataType=Integer, offset=16, mode=input, scopeDepth=1}
+  Parameter{name='x', dataType=Integer, offset=12, mode=input, scopeDepth=1}
+Subroutines:
+  ── Function: absDiff ──
+     Scope Depth: 2
+    Return Type: Integer
+      ActivationRecord:
+        Temporary Variables: $T_2:Integer@24, $T_1:Integer@28, $T_3:Integer@32
+        Local Variables:     absDiff:Integer@20
+        Formal Parameters:   p:Integer@12, q:Integer@16
+        StartingQuadAddress: 1
+        Record Size:         36 bytes
+---
+
+Closing scope    || Depth: 1
+Variables:
+  LocalVariable{name='min', dataType=Integer, offset=20, scopeDepth=1}
+  Parameter{name='j', dataType=Integer, offset=16, mode=input, scopeDepth=1}
+  Parameter{name='i', dataType=Integer, offset=12, mode=input, scopeDepth=1}
+Subroutines:
+  (none)
+---
+
+Closing scope    || Depth: 1
+Variables:
+  LocalVariable{name='temp', dataType=Integer, offset=16, scopeDepth=1}
+  Parameter{name='n', dataType=Integer, offset=12, mode=input, scopeDepth=1}
+Subroutines:
+  (none)
+---
+
+Closing scope    || Depth: 0
+Variables:
+  LocalVariable{name='f', dataType=Integer, offset=24, scopeDepth=0}
+  LocalVariable{name='c', dataType=Integer, offset=20, scopeDepth=0}
+  LocalVariable{name='b', dataType=Integer, offset=16, scopeDepth=0}
+  LocalVariable{name='a', dataType=Integer, offset=12, scopeDepth=0}
+Subroutines:
+  ── Procedure: $$$_Main_$$$ ──
+     Scope Depth: 0
+      ActivationRecord:
+        Temporary Variables: $T_14:Integer@28, $T_15:Integer@32, $T_12:Integer@36, $T_13:Integer@40, $T_18:Integer@44, $T_16:Integer@48, $T_17:Integer@52, $T_11:Integer@56
+        Local Variables:     a:Integer@12, b:Integer@16, c:Integer@20, f:Integer@24
+        Formal Parameters:   none
+        StartingQuadAddress: 59
+        Record Size:         60 bytes
+  ── Function: min ──
+     Scope Depth: 1
+    Return Type: Integer
+      ActivationRecord:
+        Temporary Variables: none
+        Local Variables:     min:Integer@20
+        Formal Parameters:   i:Integer@12, j:Integer@16
+        StartingQuadAddress: 38
+        Record Size:         24 bytes
+  ── Function: max ──
+     Scope Depth: 1
+    Return Type: Integer
+      ActivationRecord:
+        Temporary Variables: $T_4:Integer@32, $T_6:Integer@36, $T_5:Integer@40, $T_8:Integer@44, $T_7:Integer@48
+        Local Variables:     max:Integer@20, x1:Integer@24, x2:Integer@28
+        Formal Parameters:   x:Integer@12, y:Integer@16
+        StartingQuadAddress: 17
+        Record Size:         52 bytes
+  ── Procedure: factor ──
+     Scope Depth: 1
+      ActivationRecord:
+        Temporary Variables: $T_9:Integer@20, $T_10:Integer@24
+        Local Variables:     temp:Integer@16
+        Formal Parameters:   n:Integer@12
+        StartingQuadAddress: 46
+        Record Size:         28 bytes
+---
+
