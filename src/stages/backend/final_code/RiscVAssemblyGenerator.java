@@ -270,17 +270,6 @@ public class RiscVAssemblyGenerator {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
     public void emitJump(Quad quad){
         this.emit("j L" + quad.getResult());
     }

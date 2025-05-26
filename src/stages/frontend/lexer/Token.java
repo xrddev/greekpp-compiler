@@ -1,5 +1,4 @@
 package stages.frontend.lexer;
-import stages.frontend.parser.DFAState;
 
 
 public class Token {

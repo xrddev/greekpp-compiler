@@ -1,7 +1,6 @@
 package stages.frontend.lexer;
 
 import errors.LexerErrors;
-import stages.frontend.parser.DFAState;
 
 import java.util.Set;
 

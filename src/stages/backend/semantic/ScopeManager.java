@@ -139,23 +139,6 @@ public class ScopeManager {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public void printScopesLog(String programName) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(programName + ".sym"))) {
             writer.write(scopesLog.toString());

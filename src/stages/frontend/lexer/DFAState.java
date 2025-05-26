@@ -1,6 +1,4 @@
-package stages.frontend.parser;
-
-import stages.frontend.lexer.CharacterType;
+package stages.frontend.lexer;
 
 import java.util.EnumMap;
 import java.util.Map;
