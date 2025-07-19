@@ -125,7 +125,6 @@ L13:
 	sw t0, 8(sp)
 	# ret par ↑↑↑
 
-	sw ra, 0(sp)
 	jal L0
 	# call ↑↑↑
 
@@ -222,7 +221,6 @@ L23:
 	sw t0, 16(sp)
 	# parameter B ↑↑↑
 
-	sw ra, 0(sp)
 	jal L8
 	# call ↑↑↑
 

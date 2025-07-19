@@ -193,9 +193,6 @@ public class RiscVAssemblyGenerator {
         if(subroutineIsFunction)
             this.generateAsmForFunctionReturnParameter(scopeQuads.get(callQuadIndex - 1));
 
-
-        //save return address to callee
-        this.emit("sw ra, 0(sp)");
         //Jump to begin block quad. Always will be just before the function starting quad.
         this.emit("jal L" + (subroutine.getActivationRecord().getStartingQuadAddress() -1));
 

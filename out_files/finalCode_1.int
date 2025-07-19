@@ -1,0 +1,81 @@
+ 0 : begin_block, absDiff, _, _
+ 1 : out, _, _, p
+ 2 : out, _, _, q
+ 3 : out, _, _, 666
+ 4 : out, _, _, f
+ 5 : out, _, _, 666
+ 6 : -, p, q, $T_1
+ 7 : >=, $T_1, 0, 9
+ 8 : jump, _, _, 12
+ 9 : -, p, q, $T_2
+10 : :=, $T_2, _, absDiff
+11 : jump, _, _, 14
+12 : -, q, p, $T_3
+13 : :=, $T_3, _, absDiff
+14 : retv, _, _, absDiff
+15 : end_block, absDiff, _, _
+16 : begin_block, max, _, _
+17 : +, x, y, $T_4
+18 : :=, $T_4, _, x1
+19 : par, x, cv, _
+20 : par, y, cv, _
+21 : par, $T_5, ret, _
+22 : call, _, _, absDiff
+23 : :=, $T_5, _, x2
+24 : out, _, _, x1
+25 : out, _, _, 555
+26 : out, _, _, a
+27 : out, _, _, 555
+28 : out, _, _, x2
+29 : out, _, _, c
+30 : +, x1, x2, $T_6
+31 : out, _, _, $T_6
+32 : +, x1, x2, $T_7
+33 : /, $T_7, c, $T_8
+34 : :=, $T_8, _, max
+35 : retv, _, _, max
+36 : end_block, max, _, _
+37 : begin_block, min, _, _
+38 : <, i, j, 40
+39 : jump, _, _, 42
+40 : :=, i, _, min
+41 : jump, _, _, 43
+42 : :=, j, _, min
+43 : retv, _, _, min
+44 : end_block, min, _, _
+45 : begin_block, $$$_Main_$$$, _, _
+46 : :=, 5, _, a
+47 : :=, 13, _, b
+48 : :=, 2, _, c
+49 : :=, 30, _, f
+50 : par, a, cv, _
+51 : par, b, cv, _
+52 : par, $T_9, ret, _
+53 : call, _, _, max
+54 : out, _, _, $T_9
+55 : out, _, _, 999
+56 : out, _, _, 999
+57 : out, _, _, 999
+58 : /, 100, 10, $T_10
+59 : +, 4, $T_10, $T_11
+60 : /, $T_11, 2, $T_12
+61 : par, $T_12, cv, _
+62 : par, 20, cv, _
+63 : par, $T_13, ret, _
+64 : call, _, _, min
+65 : par, 4, cv, _
+66 : par, 76, cv, _
+67 : par, $T_14, ret, _
+68 : call, _, _, min
+69 : par, $T_13, cv, _
+70 : par, $T_14, cv, _
+71 : par, $T_15, ret, _
+72 : call, _, _, min
+73 : /, $T_15, 1, $T_16
+74 : out, _, _, $T_16
+75 : out, _, _, 999
+76 : out, _, _, 999
+77 : out, _, _, 999
+78 : out, _, _, f
+79 : halt, _, _, _
+80 : end_block, $$$_Main_$$$, _, _
