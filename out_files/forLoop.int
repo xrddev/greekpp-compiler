@@ -1,0 +1,100 @@
+ 0 : begin_block, for_loop_default_step, _, _
+ 1 : :=, 1, _, i
+ 2 : >=, 1, 0, 4
+ 3 : jump, _, _, 6
+ 4 : <=, i, 10, 8
+ 5 : jump, _, _, 15
+ 6 : >=, i, 10, 8
+ 7 : jump, _, _, 15
+ 8 : *, a, b, $T_1
+ 9 : +, a, $T_1, $T_2
+10 : :=, $T_2, _, a
+11 : +, i, 1, $T_3
+12 : :=, $T_3, _, i
+13 : >=, 1, 0, 4
+14 : jump, _, _, 6
+15 : end_block, for_loop_default_step, _, _
+16 : begin_block, for_loop_positive_step, _, _
+17 : :=, 2, _, j
+18 : >=, 4, 0, 20
+19 : jump, _, _, 22
+20 : <=, j, 30, 24
+21 : jump, _, _, 31
+22 : >=, j, 30, 24
+23 : jump, _, _, 31
+24 : *, a, b, $T_4
+25 : +, a, $T_4, $T_5
+26 : :=, $T_5, _, a
+27 : +, j, 4, $T_6
+28 : :=, $T_6, _, j
+29 : >=, 4, 0, 20
+30 : jump, _, _, 22
+31 : end_block, for_loop_positive_step, _, _
+32 : begin_block, for_lοοp_negative_step, _, _
+33 : :=, 100, _, k
+34 : -, 0, 5, $T_7
+35 : >=, $T_7, 0, 37
+36 : jump, _, _, 39
+37 : <=, k, 20, 41
+38 : jump, _, _, 48
+39 : >=, k, 20, 41
+40 : jump, _, _, 48
+41 : *, a, b, $T_8
+42 : +, a, $T_8, $T_9
+43 : :=, $T_9, _, a
+44 : +, k, $T_7, $T_10
+45 : :=, $T_10, _, k
+46 : >=, $T_7, 0, 37
+47 : jump, _, _, 39
+48 : end_block, for_lοοp_negative_step, _, _
+49 : begin_block, max, _, _
+50 : >, x, y, 52
+51 : jump, _, _, 54
+52 : :=, x, _, max
+53 : jump, _, _, 55
+54 : :=, y, _, max
+55 : retv, _, _, max
+56 : end_block, max, _, _
+57 : begin_block, for_lοοp_with_expressions, _, _
+58 : /, 12, 4, $T_11
+59 : /, 30, 5, $T_12
+60 : par, $T_11, cv, _
+61 : par, $T_12, cv, _
+62 : par, $T_13, ret, _
+63 : call, _, _, max
+64 : +, 2, 1, $T_14
+65 : par, $T_14, cv, _
+66 : par, 4, cv, _
+67 : par, $T_15, ret, _
+68 : call, _, _, max
+69 : par, $T_13, cv, _
+70 : par, $T_15, cv, _
+71 : par, $T_16, ret, _
+72 : call, _, _, max
+73 : /, $T_16, 2, $T_17
+74 : /, $T_17, 7, $T_18
+75 : :=, $T_18, _, p
+76 : *, 2, 4, $T_19
+77 : +, 1, $T_19, $T_20
+78 : +, $T_20, 1, $T_21
+79 : /, 10, 5, $T_22
+80 : >=, $T_22, 0, 82
+81 : jump, _, _, 84
+82 : <=, p, $T_21, 86
+83 : jump, _, _, 91
+84 : >=, p, $T_21, 86
+85 : jump, _, _, 91
+86 : out, _, _, p
+87 : +, p, $T_22, $T_23
+88 : :=, $T_23, _, p
+89 : >=, $T_22, 0, 82
+90 : jump, _, _, 84
+91 : end_block, for_lοοp_with_expressions, _, _
+92 : begin_block, $$$_Main_$$$, _, _
+93 : :=, 10, _, a
+94 : call, _, _, for_loop_default_step
+95 : call, _, _, for_loop_positive_step
+96 : call, _, _, for_lοοp_negative_step
+97 : call, _, _, for_lοοp_with_expressions
+98 : halt, _, _, _
+99 : end_block, $$$_Main_$$$, _, _

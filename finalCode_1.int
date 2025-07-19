@@ -1,6 +1,0 @@
-0 : begin_block, $$$_Main_$$$, _, _
-1 : in, _, _, a
-2 : +, a, 2, $T_1
-3 : out, _, _, $T_1
-4 : halt, _, _, _
-5 : end_block, $$$_Main_$$$, _, _
